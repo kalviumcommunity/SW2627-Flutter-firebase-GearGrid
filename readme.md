@@ -321,9 +321,9 @@ event-equipment-rental/
 
 | Name            | Role                      |
 | --------------- | ------------------------- |
-| **[Your Name]** | Project Admin / Developer |
-| **[Member 2]**  | Developer                 |
-| **[Member 3]**  | Developer                 |
+| **Jatin Yadav** | Project Admin / Developer |
+| **Priyanshu Dolwani** | Developer                 |
+| **Madhav**  | Developer                 |
 
 ---
 

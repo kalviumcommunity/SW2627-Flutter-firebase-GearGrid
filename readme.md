@@ -327,19 +327,6 @@ event-equipment-rental/
 
 ---
 
-## Team Working Agreement
-
-* Commit work regularly.
-* Create a separate branch for each feature.
-* Create Pull Requests before merging into `main`.
-* Review teammates' Pull Requests.
-* Test the application before creating a PR.
-* Communicate blockers during standup.
-* Keep the GitHub board updated.
-* Write meaningful commit messages.
-* Do not directly push feature changes to `main`.
-
----
 
 ## Git Workflow
 
@@ -355,26 +342,6 @@ main
  └── feature/authentication
 ```
 
-Typical workflow:
-
-```bash
-git checkout -b feature/your-feature
-```
-
-Make changes and commit:
-
-```bash
-git add .
-git commit -m "Add equipment availability check"
-```
-
-Push the branch:
-
-```bash
-git push -u origin feature/your-feature
-```
-
-Create a Pull Request on GitHub and merge it into `main` after review.
 
 ---
 
@@ -389,27 +356,6 @@ The primary goals of this application are:
 5. **Reduce dependency on phone-based coordination**
 6. **Provide a reliable mobile workflow for rental staff**
 
----
-
-## Sprint 2 Day 1
-
-### Completed
-
-* [x] Flutter project initialized
-* [x] GitHub repository created
-* [x] Team members added
-* [x] Problem statement discussed
-* [x] Initial solution identified
-* [x] Team Charter added
-* [ ] PRD
-* [ ] System Design
-* [ ] Firebase configuration
-* [ ] Authentication
-* [ ] Equipment management
-* [ ] Booking management
-* [ ] Conflict detection
-* [ ] Dispatch scheduling
-* [ ] Testing
 
 ---
 
@@ -432,10 +378,12 @@ Potential improvements after the core application:
 
 **Status:** 🚧 In Development
 
-**Sprint:** Sprint 2 — Mobile App Development
+**Sprint:** Mobile App Development
 
 **Platform:** Android / Cross-platform
 
 **Framework:** Flutter
 
 **Backend:** Firebase
+
+

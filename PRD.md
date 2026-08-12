@@ -1,281 +1,846 @@
 # Product Requirements Document (PRD)
 
-## 1. Project Title
+# Event Equipment Rental & Booking System
 
-**Event Equipment Rental & Booking System**
+## 1. Project Overview
+
+The **Event Equipment Rental & Booking System** is a platform for managing the rental of event equipment such as sound systems, lighting equipment, tables, chairs, microphones, and other event-related items.
+
+The system will allow customers to check equipment availability and create bookings while allowing administrators to manage equipment, bookings, availability, and dispatch schedules.
+
+The main purpose of the system is to **prevent double bookings and equipment conflicts**.
 
 ---
 
 ## 2. Problem Statement
 
-A regional event equipment rental company supplies sound systems, lighting, and furniture for weddings and corporate events.
+Currently, the rental company manages equipment bookings and dispatch schedules mainly through phone calls and manual coordination.
 
-Currently, bookings and dispatch schedules are managed through individual phone calls. During peak season, the same equipment can be committed to multiple events at overlapping times.
+This creates several problems:
 
-The company often discovers these conflicts only when the warehouse team starts preparing the equipment.
+* The same equipment can be booked for multiple events at the same time.
+* Equipment availability is difficult to track.
+* Booking conflicts may only be discovered when equipment is being prepared for dispatch.
+* Customers do not have a simple way to check availability.
+* Admins have difficulty managing multiple bookings.
+* Manual scheduling increases the possibility of human errors.
 
-This creates confusion, delays, and problems for both the company and customers.
-
----
-
-## 3. Project Goal
-
-The main goal of this system is to:
-
-> **Prevent double bookings by checking equipment availability before confirming a booking.**
-
-The system should make it easy for customers to book equipment and for admins to manage bookings and equipment availability.
+The system will solve these problems by maintaining a centralized record of equipment and bookings and automatically checking availability before confirming a booking.
 
 ---
 
-## 4. Users
+## 3. Product Goal
+
+The primary goal of the system is:
+
+> **To prevent equipment double-booking by automatically checking equipment availability before confirming a booking.**
+
+The system should provide:
+
+* Easy equipment discovery for customers
+* Accurate availability checking
+* Reliable booking management
+* Admin control over equipment and bookings
+* Clear dispatch scheduling
+
+---
+
+## 4. Target Users
+
+The system will have two main types of users.
+
+### 4.1 Customer
+
+Customers use the system to:
+
+* Register and log in
+* View available equipment
+* Select required equipment
+* Select event date and time
+* Create bookings
+* View booking details
+* Track booking status
+* Cancel eligible bookings
+
+### 4.2 Admin
+
+Admins use the system to:
+
+* Manage equipment
+* Manage equipment quantities
+* View all bookings
+* Approve or reject bookings
+* Update booking status
+* Check equipment availability
+* Manage dispatch schedules
+* Identify booking conflicts
+
+---
+
+# 5. User Roles & Permissions
+
+| Feature                   | Customer | Admin |
+| ------------------------- | -------- | ----- |
+| Register                  | Yes      | No    |
+| Login                     | Yes      | Yes   |
+| View Equipment            | Yes      | Yes   |
+| Create Booking            | Yes      | Yes   |
+| View Own Bookings         | Yes      | Yes   |
+| View All Bookings         | No       | Yes   |
+| Cancel Own Booking        | Yes*     | Yes   |
+| Manage Equipment          | No       | Yes   |
+| Update Equipment Quantity | No       | Yes   |
+| Update Booking Status     | No       | Yes   |
+| Manage Dispatch           | No       | Yes   |
+
+*Cancellation depends on the booking status and business rules.
+
+---
+
+# 6. Core Features
+
+## 6.1 Authentication
+
+The system should provide secure authentication.
 
 ### Customer
 
-Customers can:
+Customers should be able to:
 
-* View available equipment
-* Select equipment
-* Select event date and time
-* Create a booking
-* View their bookings
-* Check booking status
+* Register
+* Login
+* Logout
+* Access their bookings
 
 ### Admin
 
-Admins can:
+Admins should be able to:
 
-* Add and manage equipment
-* View all bookings
-* Check equipment availability
-* Approve or manage bookings
-* Update booking status
-* Manage dispatch schedules
-* Prevent overlapping bookings
+* Login
+* Logout
+* Access admin features
+
+The system must ensure that customers cannot access admin-only functionality.
 
 ---
 
-## 5. Core Features
+# 7. Equipment Management
 
-### 5.1 Equipment Management
+Admins should be able to manage all rental equipment.
+
+Each equipment item should contain information such as:
+
+* Equipment name
+* Category
+* Description
+* Total quantity
+* Available quantity
+* Rental price
+* Equipment status
+
+### Example Equipment
+
+```text
+Speakers
+Microphones
+Stage Lights
+Chairs
+Tables
+Sound Mixers
+Projectors
+```
+
+### Admin Actions
 
 Admin can:
 
 * Add equipment
-* Update equipment details
+* Edit equipment
 * Remove equipment
-* Set equipment quantity
-* View available equipment
-
-Examples:
-
-* Speakers
-* Microphones
-* Lights
-* Chairs
-* Tables
+* Update quantity
+* View equipment
+* Mark equipment as unavailable
 
 ---
 
-### 5.2 Equipment Availability
+# 8. Equipment Availability
 
-The system should check:
+The system must automatically calculate whether the requested equipment is available for the selected date and time.
 
-* Equipment required
+Availability depends on:
+
+* Equipment
+* Required quantity
 * Booking date
 * Start time
 * End time
-* Available quantity
+* Existing confirmed bookings
 
-If the required equipment is already booked for that time, the system should **not allow the booking**.
+### Example
+
+Suppose the company owns:
+
+```text
+Total Speakers = 10
+```
+
+Existing booking:
+
+```text
+Event A
+6 Speakers
+10:00 AM - 2:00 PM
+```
+
+New customer requests:
+
+```text
+5 Speakers
+11:00 AM - 1:00 PM
+```
+
+The system calculates:
+
+```text
+6 + 5 = 11 speakers required
+```
+
+But only 10 speakers exist.
+
+Therefore:
+
+```text
+Booking = Rejected
+```
+
+The system should display:
+
+> Selected equipment is not available for the requested time.
 
 ---
 
-### 5.3 Customer Booking
+# 9. Booking System
 
-Customer can:
+Customers should be able to create equipment rental bookings.
 
-1. Select equipment
-2. Select event date
-3. Select start and end time
-4. Enter event details
-5. Submit booking
+## Booking Process
 
-The system checks availability before confirming the booking.
+```text
+Login
+  ↓
+Browse Equipment
+  ↓
+Select Equipment
+  ↓
+Select Quantity
+  ↓
+Select Event Date
+  ↓
+Select Start & End Time
+  ↓
+Enter Event Details
+  ↓
+Check Availability
+  ↓
+Available?
+ ┌───────────────┐
+ Yes             No
+ ↓                ↓
+Create Booking   Show Error
+ ↓
+Booking Created
+```
 
 ---
 
-### 5.4 Double Booking Prevention
+# 10. Booking Information
 
-This is the **most important feature**.
+Each booking should contain:
 
-Example:
-
-If:
-
-**Event A → Speaker → 10 AM–2 PM**
-
-is already booked, another customer should **not be able to book the same unavailable speaker for an overlapping time**.
-
-The system should show a message such as:
-
-> "Selected equipment is not available for this time."
+* Booking ID
+* Customer ID
+* Event name
+* Event location
+* Event date
+* Start time
+* End time
+* Selected equipment
+* Equipment quantity
+* Booking status
+* Created date
+* Updated date
 
 ---
 
-### 5.5 Booking Management
+# 11. Double Booking Prevention
 
-Customers can:
+This is the **most important business requirement** of the system.
+
+The system must never confirm a booking when the required equipment quantity is unavailable during the requested time period.
+
+## Overlapping Booking Rule
+
+Two bookings overlap when:
+
+```text
+New Start < Existing End
+AND
+New End > Existing Start
+```
+
+If the bookings overlap, the system must check the total equipment quantity being used.
+
+### Example
+
+Total chairs:
+
+```text
+100
+```
+
+Existing booking:
+
+```text
+60 chairs
+10 AM - 2 PM
+```
+
+New booking:
+
+```text
+50 chairs
+12 PM - 3 PM
+```
+
+Because the times overlap:
+
+```text
+60 + 50 = 110
+```
+
+Available:
+
+```text
+100
+```
+
+Therefore:
+
+```text
+Booking rejected
+```
+
+---
+
+# 12. Booking Status
+
+Bookings should have the following statuses:
+
+```text
+PENDING
+CONFIRMED
+DISPATCHED
+COMPLETED
+CANCELLED
+REJECTED
+```
+
+### Status Flow
+
+```text
+PENDING
+   ↓
+CONFIRMED
+   ↓
+DISPATCHED
+   ↓
+COMPLETED
+```
+
+A booking can also become:
+
+```text
+PENDING → REJECTED
+```
+
+or
+
+```text
+CONFIRMED → CANCELLED
+```
+
+depending on the business rules.
+
+---
+
+# 13. Booking Management
+
+## Customer
+
+Customers should be able to:
 
 * View their bookings
-* See booking details
+* View booking details
 * Check booking status
-* Cancel a booking if allowed
+* Cancel eligible bookings
 
-Admins can:
+## Admin
+
+Admins should be able to:
 
 * View all bookings
-* Approve/reject bookings
-* Update booking status
+* Search bookings
+* Filter bookings
+* Approve bookings
+* Reject bookings
 * Cancel bookings
-* View booking schedules
+* Update booking status
+* View upcoming bookings
 
 ---
 
-### 5.6 Dispatch Management
+# 14. Dispatch Management
 
-Admin can see:
+The system should help the warehouse team prepare equipment for upcoming events.
 
-* Event details
-* Equipment required
+Admin should be able to view:
+
+* Event name
+* Customer
+* Event location
 * Event date
-* Start/end time
+* Start time
+* End time
+* Equipment required
+* Quantity required
 * Dispatch status
 
-This helps the warehouse team prepare the correct equipment.
-
----
-
-## 6. Booking Status
-
-A booking can have statuses such as:
-
-* **Pending**
-* **Confirmed**
-* **Dispatched**
-* **Completed**
-* **Cancelled**
-
----
-
-## 7. Basic Booking Flow
+### Example
 
 ```text
-Customer
-   ↓
-Login / Register
-   ↓
+Event: Sharma Wedding
+
+Date: 20 August 2026
+Time: 5 PM - 11 PM
+
+Equipment:
+- Speakers: 6
+- Microphones: 4
+- Lights: 10
+
+Status:
+CONFIRMED
+```
+
+This allows the warehouse team to prepare the required equipment before dispatch.
+
+---
+
+# 15. Search & Filtering
+
+The system should allow admins to find bookings quickly.
+
+Admin should be able to filter bookings by:
+
+* Date
+* Booking status
+* Customer
+* Equipment
+* Event
+
+Customers should be able to filter their booking history by:
+
+* Date
+* Status
+
+---
+
+# 16. Notifications
+
+For the MVP, notifications are optional.
+
+In future versions, the system can provide:
+
+* Booking confirmation
+* Booking rejection
+* Booking cancellation
+* Dispatch notification
+* Booking reminder
+
+Notifications may be sent through:
+
+* Email
+* SMS
+* Push notifications
+
+---
+
+# 17. Functional Requirements
+
+## Customer Requirements
+
+* Customer must be able to register.
+* Customer must be able to login.
+* Customer must be able to view equipment.
+* Customer must be able to select equipment and quantity.
+* Customer must be able to select event date and time.
+* Customer must be able to create a booking.
+* System must check equipment availability.
+* System must prevent overlapping equipment conflicts.
+* Customer must be able to view booking history.
+* Customer must be able to view booking status.
+* Customer must be able to cancel eligible bookings.
+
+## Admin Requirements
+
+* Admin must be able to login.
+* Admin must be able to add equipment.
+* Admin must be able to edit equipment.
+* Admin must be able to remove equipment.
+* Admin must be able to update equipment quantity.
+* Admin must be able to view all bookings.
+* Admin must be able to approve/reject bookings.
+* Admin must be able to update booking status.
+* Admin must be able to view dispatch schedules.
+* Admin must be able to identify equipment conflicts.
+
+---
+
+# 18. Non-Functional Requirements
+
+## Security
+
+* User passwords must be securely stored.
+* Authentication must be implemented securely.
+* Customers must not access admin functionality.
+* Sensitive user information must be protected.
+
+## Performance
+
+* Availability checks should return quickly.
+* Booking operations should be reliable.
+* The system should support multiple users.
+
+## Reliability
+
+The system must correctly prevent double bookings even when multiple customers try to book the same equipment at nearly the same time.
+
+## Usability
+
+* The interface should be simple.
+* Important information should be easy to find.
+* Booking errors should have clear messages.
+
+## Scalability
+
+The system should be designed so that the company can add:
+
+* More equipment
+* More customers
+* More bookings
+* More administrators
+
+in the future.
+
+---
+
+# 19. Important Business Rules
+
+### Rule 1 — Equipment Quantity
+
+A booking cannot be confirmed if the requested quantity is greater than the available quantity.
+
+### Rule 2 — Time Overlap
+
+The system must check existing bookings for overlapping time periods.
+
+### Rule 3 — Cancelled Bookings
+
+Cancelled bookings should no longer consume equipment availability.
+
+### Rule 4 — Completed Bookings
+
+Completed bookings should remain in booking history but should not block future availability.
+
+### Rule 5 — Equipment Availability
+
+Equipment marked unavailable by an admin cannot be booked.
+
+### Rule 6 — Booking Validation
+
+Start time must be before end time.
+
+### Rule 7 — Past Dates
+
+Customers should not be allowed to create bookings for dates/times that have already passed.
+
+### Rule 8 — Atomic Booking
+
+Availability checking and booking creation should be handled safely so that two users cannot successfully reserve the same limited equipment at the same time.
+
+---
+
+# 20. Main User Flow
+
+## Customer Flow
+
+```text
+Register/Login
+      ↓
+Browse Equipment
+      ↓
 Select Equipment
-   ↓
+      ↓
+Select Quantity
+      ↓
 Select Date & Time
-   ↓
+      ↓
+Enter Event Details
+      ↓
 Check Availability
-   ↓
+      ↓
 Available?
-  / \
-Yes  No
- ↓    ↓
-Book  Show Error
+   /       \
+ Yes       No
+ ↓          ↓
+Create     Show
+Booking    Error
  ↓
-Booking Confirmed
+View Booking
+ ↓
+Track Status
 ```
 
----
-
-## 8. Functional Requirements
-
-### Customer Requirements
-
-* Customer should be able to register/login.
-* Customer should be able to view equipment.
-* Customer should be able to select date and time.
-* Customer should be able to create a booking.
-* System should check equipment availability.
-* System should prevent overlapping bookings.
-* Customer should be able to view booking history.
-
-### Admin Requirements
-
-* Admin should be able to login.
-* Admin should be able to manage equipment.
-* Admin should be able to view all bookings.
-* Admin should be able to manage booking status.
-* Admin should be able to view dispatch schedules.
-* Admin should be able to identify equipment availability.
-
----
-
-## 9. Non-Functional Requirements
-
-* **Security:** Customer and admin data should be protected.
-* **Reliability:** The system should correctly prevent double bookings.
-* **Performance:** Availability checks should be fast.
-* **Usability:** The interface should be simple and easy to understand.
-* **Scalability:** The system should support more customers, equipment, and bookings in the future.
-
----
-
-## 10. Important Business Rule
-
-The system **must not confirm a booking if the required equipment quantity is unavailable during the requested time period.**
-
-For example:
+## Admin Flow
 
 ```text
-Available speakers = 10
-
-Event A books = 6 speakers
-Event B wants = 5 speakers
-
-6 + 5 = 11
-
-Only 10 are available
-→ Booking B must be rejected
+Admin Login
+     ↓
+Dashboard
+     ↓
+Manage Equipment
+     ↓
+View Bookings
+     ↓
+Check Availability
+     ↓
+Approve / Reject
+     ↓
+Manage Dispatch
+     ↓
+Update Status
 ```
 
 ---
 
-## 11. Success Criteria
+# 21. Suggested Main Screens
 
-The project will be successful if:
+## Customer Screens
 
-* Customers can make equipment bookings.
-* Admin can manage equipment and bookings.
-* The system correctly checks availability.
-* The same equipment cannot be double-booked.
-* Admin can view upcoming bookings and dispatch schedules.
-* Booking conflicts are detected before the warehouse/loading stage.
+1. Login
+2. Register
+3. Home
+4. Equipment List
+5. Equipment Details
+6. Create Booking
+7. Booking Confirmation
+8. My Bookings
+9. Booking Details
+10. Profile
+
+## Admin Screens
+
+1. Admin Login
+2. Admin Dashboard
+3. Equipment Management
+4. Add Equipment
+5. Edit Equipment
+6. Booking Management
+7. Booking Details
+8. Availability Calendar
+9. Dispatch Schedule
 
 ---
 
-## 12. Future Enhancements
+# 22. MVP Scope
 
-Possible future features:
+The first version of the project should focus only on the most important functionality.
 
-* Online payment
+### MVP Features
+
+* Customer registration/login
+* Admin login
+* Equipment management
+* Equipment listing
+* Equipment quantity management
+* Date/time selection
+* Booking creation
+* Availability checking
+* Double booking prevention
+* Customer booking history
+* Admin booking management
+* Booking status management
+* Basic dispatch schedule
+
+### Not Required for MVP
+
+The following can be added later:
+
+* Online payments
+* SMS notifications
+* Email notifications
+* Invoices
+* Analytics
+* Maintenance tracking
+* Delivery staff management
+* Advanced reports
+
+---
+
+# 23. Future Enhancements
+
+Future versions may include:
+
+* Online payment integration
 * Email/SMS notifications
-* Automatic reminders
+* Automatic booking reminders
 * Invoice generation
 * Equipment maintenance tracking
-* Reports and analytics
-* Calendar-based scheduling
-* Delivery staff management
+* Advanced analytics
+* Calendar integration
+* Delivery tracking
+* Staff management
+* Customer reviews
 * Mobile application
+* Multi-location inventory management
 
 ---
 
-## 13. Platform
+# 24. Success Criteria
 
-**To be decided.**
+The project will be considered successful when:
 
-The system can later be implemented as a web application or mobile application depending on the project requirements.
+1. Customers can register and login.
+2. Customers can view available equipment.
+3. Customers can select equipment and quantities.
+4. Customers can select event dates and times.
+5. The system checks equipment availability.
+6. The system prevents double bookings.
+7. Admins can manage equipment.
+8. Admins can manage bookings.
+9. Admins can update booking status.
+10. Admins can view dispatch schedules.
+11. Booking conflicts are detected before equipment dispatch.
+12. Equipment quantities are correctly calculated for overlapping bookings.
+
+---
+
+# 25. Technology
+
+The exact technology stack can be finalized based on project requirements.
+
+### Possible Stack
+
+**Frontend**
+
+* Flutter
+
+**Backend**
+
+* Node.js
+* Express.js
+
+**Database**
+
+* PostgreSQL
+
+**Authentication**
+
+* JWT
+
+**API**
+
+* REST API
+
+**Version Control**
+
+* Git
+* GitHub
+
+The final technology stack may be changed if required.
+
+---
+
+# 26. High-Level System Architecture
+
+```text
+                Customer
+                   ↓
+             Flutter App
+                   ↓
+              REST API
+                   ↓
+          Node.js / Express
+                   ↓
+          Business Logic
+                   ↓
+        Availability Checking
+                   ↓
+             PostgreSQL
+                   ↓
+        Booking & Equipment Data
+```
+
+Admin will use the same backend through an admin interface.
+
+---
+
+# 27. Core Data Entities
+
+The system will primarily require the following entities:
+
+```text
+User
+  ↓
+Booking
+  ↓
+BookingItem
+  ↓
+Equipment
+```
+
+Additional entities may include:
+
+```text
+Dispatch
+Category
+Notification
+```
+
+### Basic Relationship
+
+```text
+User
+  │
+  └──< Booking
+          │
+          └──< BookingItem >── Equipment
+```
+
+One customer can have multiple bookings.
+
+One booking can contain multiple equipment items.
+
+One equipment type can appear in multiple bookings.
+
+---
+
+# 28. Final Product Objective
+
+The final system should replace manual phone-based equipment booking with a centralized digital system.
+
+The most important outcome is:
+
+> **Before confirming any booking, the system must verify that the required equipment quantity is available for the requested date and time.**
+
+This will reduce booking conflicts, improve warehouse preparation, make booking easier for customers, and help the company manage its equipment more efficiently.

@@ -982,12 +982,3 @@ Client Self-Service
 
 **One system. One source of truth. Zero double-booking surprises.**
 
-##  Team
-
-| Name            | Role                      |
-| --------------- | ------------------------- |
-| **Jatin Yadav** | Project Admin / Developer |
-| **Priyanshu Dolwani** | Developer                 |
-| **Madhav**  | Developer                 |
-
----

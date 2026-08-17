@@ -14,7 +14,9 @@ class GearGridApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'GearGrid',
-      theme: ThemeData(useMaterial3: true),
+      theme: ThemeData(
+        useMaterial3: true,
+      ),
       home: const LandingPage(),
     );
   }

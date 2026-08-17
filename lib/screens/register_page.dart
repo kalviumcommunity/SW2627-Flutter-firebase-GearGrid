@@ -1,0 +1,554 @@
+import 'package:flutter/material.dart';
+
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  // Option 2 - GearGrid colors
+  static const Color primaryGreen = Color(0xFF249B6B);
+  static const Color darkGreen = Color(0xFF187A54);
+  static const Color darkText = Color(0xFF0F172A);
+  static const Color greyText = Color(0xFF64748B);
+  static const Color borderColor = Color(0xFFE2E8F0);
+  static const Color backgroundColor = Color(0xFFF8FCFA);
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _createAccount() {
+    if (_formKey.currentState!.validate()) {
+      // Frontend only for now.
+      // Backend/Firebase authentication will be connected later.
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account creation will be connected later.'),
+          backgroundColor: primaryGreen,
+        ),
+      );
+    }
+  }
+
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(
+        color: greyText,
+        fontSize: 14,
+      ),
+      prefixIcon: Icon(
+        icon,
+        color: greyText,
+        size: 21,
+      ),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: borderColor,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: primaryGreen,
+          width: 1.5,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Colors.redAccent,
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Colors.redAccent,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: darkText,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 45,
+          height: 45,
+          decoration: BoxDecoration(
+            color: primaryGreen,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.grid_view_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+            ),
+            children: [
+              TextSpan(
+                text: 'Gear',
+                style: TextStyle(
+                  color: darkText,
+                ),
+              ),
+              TextSpan(
+                text: 'Grid',
+                style: TextStyle(
+                  color: primaryGreen,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required Widget icon,
+    required String text,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          // Social authentication will be connected later.
+        },
+        icon: icon,
+        label: Text(
+          text,
+          style: const TextStyle(
+            color: darkText,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: const BorderSide(
+            color: borderColor,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Bottom decorative green wave
+            Positioned(
+              left: -40,
+              right: -40,
+              bottom: -45,
+              child: Container(
+                height: 105,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFD9F3E7),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.elliptical(250, 70),
+                  ),
+                ),
+              ),
+            ),
+
+            // Main content
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                24,
+                12,
+                24,
+                45,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back button
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: darkText,
+                        size: 27,
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Logo
+                    _buildLogo(),
+
+                    const SizedBox(height: 34),
+
+                    // Heading
+                    RichText(
+                      text: const TextSpan(
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          height: 1.15,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: 'Create ',
+                            style: TextStyle(
+                              color: darkText,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Account',
+                            style: TextStyle(
+                              color: primaryGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      'Join GearGrid and start renting the best '
+                      'equipment for your events.',
+                      style: TextStyle(
+                        color: greyText,
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // Full Name
+                    _buildLabel('Full Name'),
+
+                    TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: _inputDecoration(
+                        hintText: 'Enter your full name',
+                        icon: Icons.person_outline_rounded,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Email
+                    _buildLabel('Email'),
+
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      decoration: _inputDecoration(
+                        hintText: 'Enter your email',
+                        icon: Icons.email_outlined,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your email';
+                        }
+
+                        if (!value.contains('@') ||
+                            !value.contains('.')) {
+                          return 'Please enter a valid email';
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Password
+                    _buildLabel('Password'),
+
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.next,
+                      decoration: _inputDecoration(
+                        hintText: 'Create a password',
+                        icon: Icons.lock_outline_rounded,
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: greyText,
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a password';
+                        }
+
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Confirm Password
+                    _buildLabel('Confirm Password'),
+
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      textInputAction: TextInputAction.done,
+                      decoration: _inputDecoration(
+                        hintText: 'Confirm your password',
+                        icon: Icons.lock_outline_rounded,
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: greyText,
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+
+                        if (value != _passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Create Account button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _createAccount,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryGreen,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(width: 9),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    // OR divider
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Divider(
+                            color: borderColor,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                          ),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              color: greyText,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const Expanded(
+                          child: Divider(
+                            color: borderColor,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Google
+                    _buildSocialButton(
+                      icon: const Text(
+                        'G',
+                        style: TextStyle(
+                          color: Color(0xFF4285F4),
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      text: 'Continue with Google',
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Apple
+                    _buildSocialButton(
+                      icon: const Icon(
+                        Icons.apple,
+                        color: Colors.black,
+                        size: 23,
+                      ),
+                      text: 'Continue with Apple',
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Login link
+                    Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        children: [
+                          const Text(
+                            'Already have an account? ',
+                            style: TextStyle(
+                              color: greyText,
+                              fontSize: 14,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              // Your teammate will connect this
+                              // to the Login Page.
+                            },
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(
+                                color: primaryGreen,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 50),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'register_page.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -65,7 +66,9 @@ class LandingPage extends StatelessWidget {
                 ),
               ],
             ),
-            child: CustomPaint(painter: _GearGridLogoPainter()),
+            child: CustomPaint(
+              painter: _GearGridLogoPainter(),
+            ),
           ),
 
           const SizedBox(width: 10),
@@ -113,7 +116,11 @@ class LandingPage extends StatelessWidget {
               child: const SizedBox(
                 width: 46,
                 height: 46,
-                child: Icon(Icons.menu_rounded, color: navy, size: 24),
+                child: Icon(
+                  Icons.menu_rounded,
+                  color: navy,
+                  size: 24,
+                ),
               ),
             ),
           ),
@@ -127,7 +134,9 @@ class LandingPage extends StatelessWidget {
       context: context,
       backgroundColor: white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(26),
+        ),
       ),
       builder: (context) {
         return SafeArea(
@@ -145,9 +154,18 @@ class LandingPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _menuItem(Icons.login_rounded, 'Login'),
-                _menuItem(Icons.inventory_2_outlined, 'Equipment'),
-                _menuItem(Icons.event_note_outlined, 'My Bookings'),
+                _menuItem(
+                  Icons.login_rounded,
+                  'Login',
+                ),
+                _menuItem(
+                  Icons.inventory_2_outlined,
+                  'Equipment',
+                ),
+                _menuItem(
+                  Icons.event_note_outlined,
+                  'My Bookings',
+                ),
               ],
             ),
           ),
@@ -156,7 +174,10 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  Widget _menuItem(IconData icon, String title) {
+  Widget _menuItem(
+    IconData icon,
+    String title,
+  ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -166,11 +187,18 @@ class LandingPage extends StatelessWidget {
           color: greenLight,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: greenDark, size: 21),
+        child: Icon(
+          icon,
+          color: greenDark,
+          size: 21,
+        ),
       ),
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w700, color: navy),
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: navy,
+        ),
       ),
       trailing: const Icon(
         Icons.arrow_forward_ios_rounded,
@@ -191,7 +219,6 @@ class LandingPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hero heading
           const Text(
             'Make Every',
             style: TextStyle(
@@ -244,7 +271,14 @@ class LandingPage extends StatelessWidget {
           _primaryButton(
             text: 'Get Started',
             icon: Icons.arrow_forward_rounded,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RegisterPage(),
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 30),
@@ -306,13 +340,19 @@ class LandingPage extends StatelessWidget {
           Positioned(
             left: 52,
             bottom: 18,
-            child: _equipmentCase(width: 82, height: 62),
+            child: _equipmentCase(
+              width: 82,
+              height: 62,
+            ),
           ),
 
           Positioned(
             left: 79,
             bottom: 69,
-            child: _equipmentCase(width: 64, height: 47),
+            child: _equipmentCase(
+              width: 64,
+              height: 47,
+            ),
           ),
 
           // Spotlight
@@ -400,14 +440,20 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  Widget _equipmentCase({required double width, required double height}) {
+  Widget _equipmentCase({
+    required double width,
+    required double height,
+  }) {
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
         color: const Color(0xFF262D2D),
         borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: const Color(0xFF596362), width: 1),
+        border: Border.all(
+          color: const Color(0xFF596362),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
@@ -501,7 +547,9 @@ class LandingPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
+        border: Border.all(
+          color: border,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -520,7 +568,11 @@ class LandingPage extends StatelessWidget {
               color: greenSoft,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: greenDark, size: 32),
+            child: Icon(
+              icon,
+              color: greenDark,
+              size: 32,
+            ),
           ),
 
           const SizedBox(height: 9),
@@ -615,9 +667,15 @@ class LandingPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: greenSoft,
               shape: BoxShape.circle,
-              border: Border.all(color: green.withValues(alpha: 0.16)),
+              border: Border.all(
+                color: green.withValues(alpha: 0.16),
+              ),
             ),
-            child: Icon(icon, color: green, size: 25),
+            child: Icon(
+              icon,
+              color: green,
+              size: 25,
+            ),
           ),
 
           const SizedBox(width: 15),
@@ -655,8 +713,15 @@ class LandingPage extends StatelessWidget {
 
   Widget _divider() {
     return Padding(
-      padding: const EdgeInsets.only(left: 68, top: 10, bottom: 10),
-      child: Container(height: 1, color: border),
+      padding: const EdgeInsets.only(
+        left: 68,
+        top: 10,
+        bottom: 10,
+      ),
+      child: Container(
+        height: 1,
+        color: border,
+      ),
     );
   }
 
@@ -678,7 +743,10 @@ class LandingPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         onTap: onPressed,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 13),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 21,
+            vertical: 13,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -691,7 +759,11 @@ class LandingPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Icon(icon, color: white, size: 18),
+              Icon(
+                icon,
+                color: white,
+                size: 18,
+              ),
             ],
           ),
         ),
@@ -709,7 +781,11 @@ class LandingPage extends StatelessWidget {
       width: double.infinity,
       child: Stack(
         children: [
-          Positioned.fill(child: CustomPaint(painter: _GreenWavePainter())),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _GreenWavePainter(),
+            ),
+          ),
         ],
       ),
     );
@@ -731,12 +807,30 @@ class _GearGridLogoPainter extends CustomPainter {
 
     final path = Path();
 
-    path.moveTo(size.width * 0.50, size.height * 0.15);
-    path.lineTo(size.width * 0.78, size.height * 0.30);
-    path.lineTo(size.width * 0.78, size.height * 0.67);
-    path.lineTo(size.width * 0.50, size.height * 0.84);
-    path.lineTo(size.width * 0.22, size.height * 0.67);
-    path.lineTo(size.width * 0.22, size.height * 0.30);
+    path.moveTo(
+      size.width * 0.50,
+      size.height * 0.15,
+    );
+    path.lineTo(
+      size.width * 0.78,
+      size.height * 0.30,
+    );
+    path.lineTo(
+      size.width * 0.78,
+      size.height * 0.67,
+    );
+    path.lineTo(
+      size.width * 0.50,
+      size.height * 0.84,
+    );
+    path.lineTo(
+      size.width * 0.22,
+      size.height * 0.67,
+    );
+    path.lineTo(
+      size.width * 0.22,
+      size.height * 0.30,
+    );
     path.close();
 
     canvas.drawPath(path, paint);
@@ -747,19 +841,42 @@ class _GearGridLogoPainter extends CustomPainter {
 
     final innerPath = Path();
 
-    innerPath.moveTo(size.width * 0.50, size.height * 0.32);
-    innerPath.lineTo(size.width * 0.63, size.height * 0.39);
-    innerPath.lineTo(size.width * 0.63, size.height * 0.58);
-    innerPath.lineTo(size.width * 0.50, size.height * 0.66);
-    innerPath.lineTo(size.width * 0.37, size.height * 0.58);
-    innerPath.lineTo(size.width * 0.37, size.height * 0.39);
+    innerPath.moveTo(
+      size.width * 0.50,
+      size.height * 0.32,
+    );
+    innerPath.lineTo(
+      size.width * 0.63,
+      size.height * 0.39,
+    );
+    innerPath.lineTo(
+      size.width * 0.63,
+      size.height * 0.58,
+    );
+    innerPath.lineTo(
+      size.width * 0.50,
+      size.height * 0.66,
+    );
+    innerPath.lineTo(
+      size.width * 0.37,
+      size.height * 0.58,
+    );
+    innerPath.lineTo(
+      size.width * 0.37,
+      size.height * 0.39,
+    );
     innerPath.close();
 
-    canvas.drawPath(innerPath, innerPaint);
+    canvas.drawPath(
+      innerPath,
+      innerPaint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
     return false;
   }
 }
@@ -777,7 +894,10 @@ class _GreenWavePainter extends CustomPainter {
 
     final path = Path();
 
-    path.moveTo(0, size.height * 0.48);
+    path.moveTo(
+      0,
+      size.height * 0.48,
+    );
 
     path.cubicTo(
       size.width * 0.20,
@@ -797,11 +917,22 @@ class _GreenWavePainter extends CustomPainter {
       size.height * 0.18,
     );
 
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
+    path.lineTo(
+      size.width,
+      size.height,
+    );
+
+    path.lineTo(
+      0,
+      size.height,
+    );
+
     path.close();
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(
+      path,
+      paint,
+    );
 
     final secondPaint = Paint()
       ..color = const Color(0xFF72D5AE)
@@ -809,7 +940,10 @@ class _GreenWavePainter extends CustomPainter {
 
     final secondPath = Path();
 
-    secondPath.moveTo(0, size.height * 0.70);
+    secondPath.moveTo(
+      0,
+      size.height * 0.70,
+    );
 
     secondPath.cubicTo(
       size.width * 0.25,
@@ -829,15 +963,28 @@ class _GreenWavePainter extends CustomPainter {
       size.height * 0.40,
     );
 
-    secondPath.lineTo(size.width, size.height);
-    secondPath.lineTo(0, size.height);
+    secondPath.lineTo(
+      size.width,
+      size.height,
+    );
+
+    secondPath.lineTo(
+      0,
+      size.height,
+    );
+
     secondPath.close();
 
-    canvas.drawPath(secondPath, secondPaint);
+    canvas.drawPath(
+      secondPath,
+      secondPaint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
     return false;
   }
 }

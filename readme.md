@@ -30,7 +30,7 @@ The project starts with this mandatory core and is designed to grow into operati
 
 The traditional workflow looks like:
 
-```text
+
 Client / Customer
        ↓
    Phone Call
@@ -44,7 +44,7 @@ Office Staff
  Warehouse Preparation
        ↓
 Conflict discovered too late
-```
+
 
 This creates:
 
@@ -58,7 +58,7 @@ This creates:
 
 The proposed system changes this to:
 
-```text
+
 Client / Staff
       ↓
 Centralized Application
@@ -74,7 +74,7 @@ Warehouse Pull List
 Dispatch
       ↓
 Return / Inspection
-```
+
 
 ---
 
@@ -126,12 +126,12 @@ Equipment is tracked as **quantity pools**, not as individually serialized units
 
 For example:
 
-```text
+
 JBL PA Speaker
 Total Quantity: 20
 Damaged Quantity: 2
 Effective Pool: 18
-```
+
 
 The system derives availability instead of storing a mutable `availableQuantity` counter as the source of truth.
 
@@ -157,15 +157,15 @@ This is the most important feature of the system.
 
 A booking does **not** use a simple:
 
-```text
-check availability → write booking
-```
 
-pattern.
+check availability → write booking
+
+
+Pattern.
 
 Instead:
 
-```text
+
 Availability Check
        ↓
 Firestore Transaction
@@ -175,13 +175,13 @@ Re-check Availability
 Write Booking + Items
        ↓
 Commit atomically
-```
+
 
 If two people attempt to reserve the last available equipment at the same time, only one transaction can successfully commit.
 
 ### Example
 
-```text
+
 Available speakers = 10
 
 Booking A requests 8
@@ -195,7 +195,7 @@ Atomic transactions
 
 Booking A → SUCCESS
 Booking B → REJECTED / ALTERNATIVE
-```
+
 
 This transaction-based approach is the foundation of the project.
 
@@ -205,7 +205,7 @@ This transaction-based approach is the foundation of the project.
 
 Bookings follow a controlled state machine:
 
-```text
+
 Requested
     ↓
 Confirmed
@@ -215,14 +215,14 @@ Dispatched
 Returned
     ↓
 Completed
-```
+
 
 Cancellation is a side exit:
 
-```text
+
 Requested ─────→ Cancelled
 Confirmed ─────→ Cancelled
-```
+
 
 Status is treated as a finite state machine rather than arbitrary text, and invalid transitions are rejected at the security layer.
 
@@ -230,7 +230,7 @@ Status is treated as a finite state machine rather than arbitrary text, and inva
 
 # 🧑‍💼 Client Flow
 
-```text
+
 Login / Signup
       ↓
 Browse Catalog
@@ -258,7 +258,7 @@ Dispatched
 Returned
    ↓
 Completed
-```
+
 
 If requested equipment is unavailable, the system can provide:
 
@@ -287,13 +287,13 @@ Phone bookings and client bookings use the **same `createBookingRequest` flow**.
 
 There is no separate booking path that bypasses conflict detection.
 
-```text
+
 Client Booking
       ↓
 createBookingRequest
       ↑
 Staff Phone Booking
-```
+
 
 This keeps the most important business rule centralized.
 
@@ -303,7 +303,7 @@ This keeps the most important business rule centralized.
 
 The warehouse receives an advance pull list instead of discovering conflicts during loading.
 
-```text
+
 Today's Confirmed Bookings
           ↓
      Pull List
@@ -323,7 +323,7 @@ Today's Confirmed Bookings
   Returned    Damage Report
       ↓           ↓
   Completed   AI Draft + Review
-```
+
 
 Warehouse capabilities include:
 
@@ -343,9 +343,9 @@ Important booking status changes are recorded automatically.
 
 For example:
 
-```text
+
 Requested → Confirmed
-```
+
 
 creates an audit entry containing the relevant actor and transition information.
 
@@ -361,7 +361,7 @@ Security is enforced server-side.
 
 The application uses:
 
-```text
+
 Firebase Authentication
         +
 Custom Claims
@@ -371,27 +371,25 @@ Firestore Security Rules
 Cloud Functions
         +
 Atomic Transactions
-```
 
 ### Role enforcement
 
 Roles:
 
-```text
+
 admin
 staff
 warehouse
 client
-```
+
 
 The role stored in the user's Firestore document is for application data/display. The trusted permission source is the Firebase Auth custom claim.
 
 ### Default security posture
 
-```text
 Default → DENY
 Explicitly permitted → ALLOW
-```
+
 
 The UI is never treated as the security boundary.
 
@@ -401,7 +399,7 @@ The UI is never treated as the security boundary.
 
 The repository is a single monorepo containing two deployable units:
 
-```text
+
 equipment-rental-app/
 │
 ├── app/                 # Flutter client
@@ -409,7 +407,7 @@ equipment-rental-app/
 ├── functions/           # Firebase Cloud Functions
 │
 └── shared/              # Shared data contracts
-```
+
 
 ### Why a monorepo?
 
@@ -493,7 +491,7 @@ Need speakers, lights and 300 chairs.
 
 The system converts it into a structured draft:
 
-```text
+
 Event Type: Wedding
 Guests: 500
 Date: Saturday
@@ -502,7 +500,7 @@ Equipment:
 - Speakers
 - Lighting
 - Chairs: 300
-```
+
 
 The draft still goes through the normal booking review and transaction flow.
 
@@ -518,7 +516,7 @@ AI-assisted quote generation is planned on top of the pricing engine.
 
 Warehouse staff can upload a damage photo.
 
-```text
+
 Damage Photo
      ↓
 AI Draft Description
@@ -526,7 +524,7 @@ AI Draft Description
 Warehouse Review
      ↓
 Confirmed Damage Report
-```
+
 
 AI output is always human-reviewed before being committed.
 

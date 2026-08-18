@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
+import 'register_page.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
 
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
   // Option 2 - GearGrid colors
   static const Color primaryGreen = Color(0xFF249B6B);
@@ -30,21 +26,19 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _createAccount() {
+  void _login() {
     if (_formKey.currentState!.validate()) {
       // Frontend only for now.
       // Backend/Firebase authentication will be connected later.
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Account creation will be connected later.'),
+          content: Text('Login functionality will be connected later.'),
           backgroundColor: primaryGreen,
         ),
       );
@@ -264,13 +258,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         children: [
                           TextSpan(
-                            text: 'Create ',
+                            text: 'Welcome ',
                             style: TextStyle(
                               color: darkText,
                             ),
                           ),
                           TextSpan(
-                            text: 'Account',
+                            text: 'Back',
                             style: TextStyle(
                               color: primaryGreen,
                             ),
@@ -282,8 +276,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 8),
 
                     const Text(
-                      'Join GearGrid and start renting the best '
-                      'equipment for your events.',
+                      'Log in to GearGrid to manage your event equipment rentals.',
                       style: TextStyle(
                         color: greyText,
                         fontSize: 15,
@@ -292,26 +285,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
 
                     const SizedBox(height: 28),
-
-                    // Full Name
-                    _buildLabel('Full Name'),
-
-                    TextFormField(
-                      controller: _nameController,
-                      textInputAction: TextInputAction.next,
-                      decoration: _inputDecoration(
-                        hintText: 'Enter your full name',
-                        icon: Icons.person_outline_rounded,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 18),
 
                     // Email
                     _buildLabel('Email'),
@@ -346,9 +319,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.next,
+                      textInputAction: TextInputAction.done,
                       decoration: _inputDecoration(
-                        hintText: 'Create a password',
+                        hintText: 'Enter your password',
                         icon: Icons.lock_outline_rounded,
                         suffixIcon: IconButton(
                           onPressed: () {
@@ -366,65 +339,41 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        }
-
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return 'Please enter your password';
                         }
 
                         return null;
                       },
                     ),
-
-                    const SizedBox(height: 18),
-
-                    // Confirm Password
-                    _buildLabel('Confirm Password'),
-
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      textInputAction: TextInputAction.done,
-                      decoration: _inputDecoration(
-                        hintText: 'Confirm your password',
-                        icon: Icons.lock_outline_rounded,
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword;
-                            });
-                          },
-                          icon: Icon(
-                            _obscureConfirmPassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: greyText,
+                    
+                    const SizedBox(height: 10),
+                    
+                    // Forgot Password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Forgot password logic
+                        },
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: primaryGreen,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
-                        }
-
-                        if (value != _passwordController.text) {
-                          return 'Passwords do not match';
-                        }
-
-                        return null;
-                      },
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Create Account button
+                    // Login button
                     SizedBox(
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: _createAccount,
+                        onPressed: _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryGreen,
                           foregroundColor: Colors.white,
@@ -437,7 +386,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Create Account',
+                              'Login',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -512,13 +461,13 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 24),
 
-                    // Login link
+                    // Sign Up link
                     Center(
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         children: [
                           const Text(
-                            'Already have an account? ',
+                            'Don\'t have an account? ',
                             style: TextStyle(
                               color: greyText,
                               fontSize: 14,
@@ -529,12 +478,12 @@ class _RegisterPageState extends State<RegisterPage> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const LoginPage(),
+                                  builder: (context) => const RegisterPage(),
                                 ),
                               );
                             },
                             child: const Text(
-                              'Login',
+                              'Sign Up',
                               style: TextStyle(
                                 color: primaryGreen,
                                 fontSize: 14,

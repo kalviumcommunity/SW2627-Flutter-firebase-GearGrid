@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart';
+import 'login_page.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -155,16 +156,25 @@ class LandingPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 _menuItem(
-                  Icons.login_rounded,
-                  'Login',
+                  icon: Icons.login_rounded,
+                  title: 'Login',
+                  onTap: () {
+                    Navigator.pop(context); // Close bottom sheet
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                    );
+                  },
                 ),
                 _menuItem(
-                  Icons.inventory_2_outlined,
-                  'Equipment',
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Equipment',
                 ),
                 _menuItem(
-                  Icons.event_note_outlined,
-                  'My Bookings',
+                  icon: Icons.event_note_outlined,
+                  title: 'My Bookings',
                 ),
               ],
             ),
@@ -174,10 +184,11 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  Widget _menuItem(
-    IconData icon,
-    String title,
-  ) {
+  Widget _menuItem({
+    required IconData icon,
+    required String title,
+    VoidCallback? onTap,
+  }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -205,7 +216,7 @@ class LandingPage extends StatelessWidget {
         size: 15,
         color: textLight,
       ),
-      onTap: () {},
+      onTap: onTap ?? () {},
     );
   }
 

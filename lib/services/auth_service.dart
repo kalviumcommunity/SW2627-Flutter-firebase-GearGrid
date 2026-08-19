@@ -80,7 +80,12 @@ class AuthService {
         return 'The password provided is too weak.';
       case 'invalid-email':
         return 'The email address is not valid.';
+      case 'operation-not-allowed':
+        return 'Email/password accounts are not enabled. Please contact support.';
       default:
+        if (e.message?.contains('CONFIGURATION_NOT_FOUND') ?? false) {
+          return 'Authentication service is not fully configured on the server yet. Please try again later.';
+        }
         return e.message ?? 'An unknown error occurred.';
     }
   }

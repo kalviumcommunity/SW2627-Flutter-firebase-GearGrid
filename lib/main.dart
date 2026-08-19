@@ -40,6 +40,11 @@ class GearGridApp extends ConsumerWidget {
       title: 'GearGrid',
       theme: ThemeData(
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF16845F),
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: Colors.white,
       ),
       home: authState.when(
         data: (user) {

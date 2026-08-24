@@ -940,6 +940,9 @@ AI provides suggestions and drafts; server-side validation and transactions make
 
 The mandatory booking, availability, dispatch, security, and audit foundation must be correct before advanced AI and analytics features are layered on top.
 
+
+Current basic prototype of the application       ------       https://www.figma.com/design/kCwyuRtianihzHYPpsGGc8/Untitled?node-id=0-1&p=f&t=VzQ6UXB2Tmn9MMHA-0
+
 ---
 
 # 📄 License

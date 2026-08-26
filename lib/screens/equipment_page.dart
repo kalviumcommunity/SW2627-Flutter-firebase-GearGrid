@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'add_equipment_page.dart';
 
@@ -16,6 +17,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
   int selectedCategory = 0;
 
+  final TextEditingController searchController =
+      TextEditingController();
+
   final List<String> categories = [
     'All',
     'Sound',
@@ -23,93 +27,59 @@ class _EquipmentPageState extends State<EquipmentPage> {
     'Furniture',
   ];
 
-  // ============================================================
-  // EQUIPMENT DATA
-  // ============================================================
+  @override
+  void initState() {
+    super.initState();
 
-  final List<EquipmentItem> equipment = [
-    EquipmentItem(
-      name: 'JBL PA Speaker',
-      id: 'AUD-001',
-      category: 'Sound',
-      brand: 'JBL',
-      total: 10,
-      damaged: 1,
-      available: 7,
-      status: 'Available',
-      imagePath: 'assets/equipment/jbl_pa_speaker.png',
-    ),
-    EquipmentItem(
-      name: 'Beam 230 Moving Head',
-      id: 'LGT-002',
-      category: 'Lighting',
-      brand: 'Philips',
-      total: 12,
-      damaged: 2,
-      available: 10,
-      status: 'Available',
-      imagePath: 'assets/equipment/beam_230_moving_head.png',
-    ),
-    EquipmentItem(
-      name: 'Shure SM58 Microphone',
-      id: 'AUD-003',
-      category: 'Sound',
-      brand: 'Shure',
-      total: 15,
-      damaged: 0,
-      available: 1,
-      status: 'In Use',
-      imagePath: 'assets/equipment/shure_sm58_microphone.png',
-    ),
-    EquipmentItem(
-      name: 'Aluminum Truss 12ft',
-      id: 'STG-004',
-      category: 'Lighting',
-      brand: 'Global Truss',
-      total: 20,
-      damaged: 2,
-      available: 18,
-      status: 'Available',
-      imagePath: 'assets/equipment/aluminum_truss_12ft.png',
-    ),
-    EquipmentItem(
-      name: 'Banquet Chair',
-      id: 'FUR-005',
-      category: 'Furniture',
-      brand: 'GearGrid',
-      total: 25,
-      damaged: 3,
-      available: 5,
-      status: 'Maintenance',
-      imagePath: 'assets/equipment/banquet_chair.png',
-    ),
-    EquipmentItem(
-      name: 'Round Banquet Table 5ft',
-      id: 'FUR-006',
-      category: 'Furniture',
-      brand: 'GearGrid',
-      total: 10,
-      damaged: 0,
-      available: 8,
-      status: 'Available',
-      imagePath: 'assets/equipment/round_banquet_table_5ft.png',
-    ),
-  ];
+    searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   // ============================================================
-  // FILTERED EQUIPMENT
+  // FILTER EQUIPMENT
   // ============================================================
 
-  List<EquipmentItem> get filteredEquipment {
-    if (selectedCategory == 0) {
-      return equipment;
+  List<EquipmentItem> _filterEquipment(
+    List<EquipmentItem> equipment,
+  ) {
+    List<EquipmentItem> result = equipment;
+
+    // CATEGORY FILTER
+    if (selectedCategory != 0) {
+      final selected =
+          categories[selectedCategory].toLowerCase();
+
+      result = result.where((item) {
+        return item.category.toLowerCase() == selected;
+      }).toList();
     }
 
-    final category = categories[selectedCategory];
+    // SEARCH FILTER
+    final search =
+        searchController.text.trim().toLowerCase();
 
-    return equipment
-        .where((item) => item.category == category)
-        .toList();
+    if (search.isNotEmpty) {
+      result = result.where((item) {
+        return item.name
+                .toLowerCase()
+                .contains(search) ||
+            item.brand
+                .toLowerCase()
+                .contains(search) ||
+            item.id
+                .toLowerCase()
+                .contains(search);
+      }).toList();
+    }
+
+    return result;
   }
 
   // ============================================================
@@ -124,46 +94,217 @@ class _EquipmentPageState extends State<EquipmentPage> {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  14,
-                  20,
-                  20,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('equipment')
+                    .orderBy(
+                      'createdAt',
+                      descending: true,
+                    )
+                    .snapshots(),
 
-                    const SizedBox(height: 26),
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  // ------------------------------------------------
+                  // LOADING
+                  // ------------------------------------------------
 
-                    _buildPageTitle(),
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: green,
+                      ),
+                    );
+                  }
 
-                    const SizedBox(height: 24),
+                  // ------------------------------------------------
+                  // ERROR
+                  // ------------------------------------------------
 
-                    _buildSearchAndFilter(),
+                  if (snapshot.hasError) {
+                    return _buildErrorState(
+                      snapshot.error.toString(),
+                    );
+                  }
 
-                    const SizedBox(height: 18),
+                  // ------------------------------------------------
+                  // FIRESTORE DATA
+                  // ------------------------------------------------
 
-                    _buildCategoryTabs(),
+                  final List<EquipmentItem> equipment =
+                      snapshot.data?.docs
+                              .map(
+                                (doc) =>
+                                    EquipmentItem.fromFirestore(
+                                  doc,
+                                ),
+                              )
+                              .toList() ??
+                          [];
 
-                    const SizedBox(height: 25),
+                  final filteredEquipment =
+                      _filterEquipment(
+                    equipment,
+                  );
 
-                    _buildSortRow(),
+                  return SingleChildScrollView(
+                    physics:
+                        const BouncingScrollPhysics(),
 
-                    const SizedBox(height: 14),
+                    padding:
+                        const EdgeInsets.fromLTRB(
+                      20,
+                      14,
+                      20,
+                      20,
+                    ),
 
-                    _buildEquipmentList(),
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(),
+
+                        const SizedBox(height: 26),
+
+                        _buildPageTitle(),
+
+                        const SizedBox(height: 24),
+
+                        _buildSearchAndFilter(),
+
+                        const SizedBox(height: 18),
+
+                        _buildCategoryTabs(),
+
+                        const SizedBox(height: 25),
+
+                        _buildSortRow(
+                          equipment.length,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        if (filteredEquipment.isEmpty)
+                          _buildEmptyState()
+                        else
+                          _buildEquipmentList(
+                            filteredEquipment,
+                          ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
 
             _buildBottomNavigation(),
           ],
         ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // ERROR STATE
+  // ============================================================
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: Colors.red,
+              size: 50,
+            ),
+
+            const SizedBox(height: 15),
+
+            const Text(
+              'Unable to load equipment',
+              style: TextStyle(
+                color: dark,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Please check your Firebase connection and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: grey,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // EMPTY STATE
+  // ============================================================
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        vertical: 60,
+        horizontal: 20,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF7F1),
+              borderRadius:
+                  BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.inventory_2_outlined,
+              color: green,
+              size: 38,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          const Text(
+            'No equipment found',
+            style: TextStyle(
+              color: dark,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            searchController.text.isNotEmpty
+                ? 'Try a different search.'
+                : 'Add your first equipment item.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: grey,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -188,7 +329,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
           height: 39,
           decoration: BoxDecoration(
             color: green,
-            borderRadius: BorderRadius.circular(11),
+            borderRadius:
+                BorderRadius.circular(11),
           ),
           child: const Center(
             child: Text(
@@ -249,7 +391,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
         const SizedBox(width: 8),
 
         const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
             Text(
               'Arjun',
@@ -285,11 +428,13 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
   Widget _buildPageTitle() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         const Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Text(
                 'Equipment',
@@ -315,32 +460,35 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
         const SizedBox(width: 10),
 
-        // ========================================================
-        // ADD EQUIPMENT BUTTON
-        // ========================================================
-
         GestureDetector(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
                     const AddEquipmentPage(),
               ),
             );
-          },
 
+            // No manual refresh required.
+            //
+            // StreamBuilder is listening to Firestore,
+            // so the new equipment appears automatically.
+          },
           child: Container(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 13,
               vertical: 12,
             ),
             decoration: BoxDecoration(
               color: green,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius:
+                  BorderRadius.circular(12),
             ),
             child: const Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
                 Icon(
                   Icons.add,
@@ -355,7 +503,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                        FontWeight.w800,
                   ),
                 ),
               ],
@@ -378,33 +527,60 @@ class _EquipmentPageState extends State<EquipmentPage> {
             height: 54,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(13),
+              borderRadius:
+                  BorderRadius.circular(13),
               border: Border.all(
                 color: border,
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
 
-                Icon(
+                const Icon(
                   Icons.search_rounded,
                   color: grey,
                   size: 27,
                 ),
 
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
 
                 Expanded(
-                  child: Text(
-                    'Search equipment by name, brand or ID...',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: grey,
+                  child: TextField(
+                    controller:
+                        searchController,
+                    decoration:
+                        const InputDecoration(
+                      border: InputBorder.none,
+                      hintText:
+                          'Search equipment by name, brand or ID...',
+                      hintStyle:
+                          TextStyle(
+                        color: grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                    style:
+                        const TextStyle(
+                      color: dark,
                       fontSize: 12,
                     ),
                   ),
                 ),
+
+                if (searchController
+                    .text
+                    .isNotEmpty)
+                  IconButton(
+                    onPressed: () {
+                      searchController.clear();
+                    },
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: grey,
+                      size: 19,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -417,13 +593,15 @@ class _EquipmentPageState extends State<EquipmentPage> {
           width: 125,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(13),
+            borderRadius:
+                BorderRadius.circular(13),
             border: Border.all(
               color: border,
             ),
           ),
           child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment:
+                MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.filter_list_rounded,
@@ -438,7 +616,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
                 style: TextStyle(
                   color: dark,
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontWeight:
+                      FontWeight.w700,
                 ),
               ),
             ],
@@ -456,51 +635,66 @@ class _EquipmentPageState extends State<EquipmentPage> {
     return SizedBox(
       height: 58,
       child: ListView.separated(
-        scrollDirection: Axis.horizontal,
+        scrollDirection:
+            Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, __) {
-          return const SizedBox(width: 12);
+        separatorBuilder:
+            (_, __) {
+          return const SizedBox(
+            width: 12,
+          );
         },
-        itemBuilder: (context, index) {
+        itemBuilder:
+            (context, index) {
           final bool selected =
-              selectedCategory == index;
+              selectedCategory ==
+                  index;
 
           IconData icon;
 
           switch (index) {
             case 0:
-              icon = Icons.grid_view_rounded;
+              icon =
+                  Icons.grid_view_rounded;
               break;
 
             case 1:
-              icon = Icons.volume_up_outlined;
+              icon =
+                  Icons.volume_up_outlined;
               break;
 
             case 2:
-              icon = Icons.lightbulb_outline_rounded;
+              icon =
+                  Icons.lightbulb_outline_rounded;
               break;
 
             default:
-              icon = Icons.chair_outlined;
+              icon =
+                  Icons.chair_outlined;
           }
 
           return GestureDetector(
             onTap: () {
               setState(() {
-                selectedCategory = index;
+                selectedCategory =
+                    index;
               });
             },
-
             child: Container(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets
+                      .symmetric(
                 horizontal: 17,
               ),
-              decoration: BoxDecoration(
+              decoration:
+                  BoxDecoration(
                 color: selected
                     ? green
                     : Colors.white,
                 borderRadius:
-                    BorderRadius.circular(12),
+                    BorderRadius.circular(
+                  12,
+                ),
                 border: Border.all(
                   color: selected
                       ? green
@@ -517,7 +711,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     size: 22,
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 8,
+                  ),
 
                   Text(
                     categories[index],
@@ -543,15 +739,18 @@ class _EquipmentPageState extends State<EquipmentPage> {
   // SORT ROW
   // ============================================================
 
-  Widget _buildSortRow() {
+  Widget _buildSortRow(
+    int totalItems,
+  ) {
     return Row(
       children: [
-        const Text(
-          'Total Items: 18',
-          style: TextStyle(
+        Text(
+          'Total Items: $totalItems',
+          style: const TextStyle(
             color: grey,
             fontSize: 13,
-            fontWeight: FontWeight.w600,
+            fontWeight:
+                FontWeight.w600,
           ),
         ),
 
@@ -562,7 +761,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
           style: TextStyle(
             color: dark,
             fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontWeight:
+                FontWeight.w600,
           ),
         ),
 
@@ -571,7 +771,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
           style: TextStyle(
             color: dark,
             fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontWeight:
+                FontWeight.w700,
           ),
         ),
 
@@ -590,15 +791,21 @@ class _EquipmentPageState extends State<EquipmentPage> {
   // EQUIPMENT LIST
   // ============================================================
 
-  Widget _buildEquipmentList() {
+  Widget _buildEquipmentList(
+    List<EquipmentItem> equipment,
+  ) {
     return Column(
-      children: filteredEquipment.map(
+      children: equipment.map(
         (item) {
           return Padding(
-            padding: const EdgeInsets.only(
+            padding:
+                const EdgeInsets.only(
               bottom: 14,
             ),
-            child: _buildEquipmentCard(item),
+            child:
+                _buildEquipmentCard(
+              item,
+            ),
           );
         },
       ).toList(),
@@ -613,29 +820,31 @@ class _EquipmentPageState extends State<EquipmentPage> {
     EquipmentItem item,
   ) {
     final int usable =
-        item.total - item.damaged;
+        (item.total - item.damaged)
+            .clamp(0, item.total);
 
     Color statusColor;
     Color statusBackground;
 
-    if (item.status == 'Available') {
+    if (usable > 0) {
       statusColor = green;
       statusBackground =
           const Color(0xFFEAF7F1);
-    } else if (item.status == 'In Use') {
-      statusColor =
-          const Color(0xFFF47A24);
-      statusBackground =
-          const Color(0xFFFFF0D9);
-    } else {
+    } else if (item.damaged > 0) {
       statusColor =
           const Color(0xFFE53935);
       statusBackground =
           const Color(0xFFFFE5E5);
+    } else {
+      statusColor =
+          const Color(0xFFF47A24);
+      statusBackground =
+          const Color(0xFFFFF0D9);
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding:
+          const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius:
@@ -655,38 +864,50 @@ class _EquipmentPageState extends State<EquipmentPage> {
         crossAxisAlignment:
             CrossAxisAlignment.center,
         children: [
-          // Equipment image
+          // ======================================================
+          // EQUIPMENT IMAGE
+          // ======================================================
+
           Container(
             width: 120,
             height: 125,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
+              color:
+                  const Color(0xFFF8F9FA),
               borderRadius:
                   BorderRadius.circular(13),
             ),
             child: ClipRRect(
               borderRadius:
                   BorderRadius.circular(13),
-              child: Image.asset(
-                item.imagePath,
-                fit: BoxFit.contain,
-                errorBuilder:
-                    (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(
-                      Icons.inventory_2_outlined,
-                      color: green,
-                      size: 45,
+              child: item.imageUrl != null &&
+                      item.imageUrl!.isNotEmpty
+                  ? Image.network(
+                      item.imageUrl!,
+                      fit: BoxFit.contain,
+                      errorBuilder:
+                          (
+                        context,
+                        error,
+                        stackTrace,
+                      ) {
+                        return _assetFallback(
+                          item,
+                        );
+                      },
+                    )
+                  : _assetFallback(
+                      item,
                     ),
-                  );
-                },
-              ),
             ),
           ),
 
           const SizedBox(width: 15),
 
-          // Equipment information
+          // ======================================================
+          // EQUIPMENT INFORMATION
+          // ======================================================
+
           Expanded(
             child: Column(
               crossAxisAlignment:
@@ -699,8 +920,10 @@ class _EquipmentPageState extends State<EquipmentPage> {
                         item.name,
                         maxLines: 2,
                         overflow:
-                            TextOverflow.ellipsis,
-                        style: const TextStyle(
+                            TextOverflow
+                                .ellipsis,
+                        style:
+                            const TextStyle(
                           color: dark,
                           fontSize: 16,
                           fontWeight:
@@ -710,46 +933,60 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     ),
 
                     const Icon(
-                      Icons.more_vert_rounded,
+                      Icons
+                          .more_vert_rounded,
                       color: grey,
                       size: 22,
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 7),
+                const SizedBox(
+                  height: 7,
+                ),
 
                 Text(
                   'ID: ${item.id}   •   ${item.category}   •   ${item.brand}',
                   maxLines: 2,
                   overflow:
                       TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     color: grey,
                     fontSize: 10.5,
                     height: 1.4,
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(
+                  height: 15,
+                ),
 
                 Row(
                   children: [
                     _quantityColumn(
                       'Total',
-                      item.total.toString(),
+                      item.total
+                          .toString(),
                       dark,
                     ),
 
-                    const SizedBox(width: 28),
+                    const SizedBox(
+                      width: 28,
+                    ),
 
                     _quantityColumn(
                       'Damaged',
-                      item.damaged.toString(),
-                      const Color(0xFFE53935),
+                      item.damaged
+                          .toString(),
+                      const Color(
+                        0xFFE53935,
+                      ),
                     ),
 
-                    const SizedBox(width: 28),
+                    const SizedBox(
+                      width: 28,
+                    ),
 
                     _quantityColumn(
                       'Usable',
@@ -764,7 +1001,10 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
           const SizedBox(width: 10),
 
-          // Availability
+          // ======================================================
+          // AVAILABILITY
+          // ======================================================
+
           Container(
             width: 105,
             padding:
@@ -783,7 +1023,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(
+                      const EdgeInsets
+                          .symmetric(
                     horizontal: 10,
                     vertical: 7,
                   ),
@@ -792,14 +1033,18 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     color:
                         statusBackground,
                     borderRadius:
-                        BorderRadius.circular(8),
+                        BorderRadius
+                            .circular(
+                      8,
+                    ),
                   ),
                   child: Text(
                     item.status,
                     textAlign:
                         TextAlign.center,
                     style: TextStyle(
-                      color: statusColor,
+                      color:
+                          statusColor,
                       fontSize: 9,
                       fontWeight:
                           FontWeight.w800,
@@ -807,7 +1052,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(
+                  height: 12,
+                ),
 
                 const Text(
                   'Available',
@@ -817,12 +1064,16 @@ class _EquipmentPageState extends State<EquipmentPage> {
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                const SizedBox(
+                  height: 4,
+                ),
 
                 Text(
-                  item.available.toString(),
+                  item.available
+                      .toString(),
                   style: TextStyle(
-                    color: statusColor,
+                    color:
+                        statusColor,
                     fontSize: 24,
                     fontWeight:
                         FontWeight.w800,
@@ -831,7 +1082,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
                 Text(
                   '/ ${item.total} Total',
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     color: grey,
                     fontSize: 10,
                   ),
@@ -841,6 +1093,40 @@ class _EquipmentPageState extends State<EquipmentPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // ============================================================
+  // ASSET IMAGE FALLBACK
+  // ============================================================
+
+  Widget _assetFallback(
+    EquipmentItem item,
+  ) {
+    if (item.imagePath == null ||
+        item.imagePath!.isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.inventory_2_outlined,
+          color: green,
+          size: 45,
+        ),
+      );
+    }
+
+    return Image.asset(
+      item.imagePath!,
+      fit: BoxFit.contain,
+      errorBuilder:
+          (context, error, stackTrace) {
+        return const Center(
+          child: Icon(
+            Icons.inventory_2_outlined,
+            color: green,
+            size: 45,
+          ),
+        );
+      },
     );
   }
 
@@ -886,13 +1172,15 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
   Widget _buildBottomNavigation() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
+      padding:
+          const EdgeInsets.fromLTRB(
         8,
         8,
         8,
         12,
       ),
-      decoration: const BoxDecoration(
+      decoration:
+          const BoxDecoration(
         color: Colors.white,
         border: Border(
           top: BorderSide(
@@ -971,7 +1259,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
                 Positioned(
                   right: -8,
                   top: -7,
-                  child: _badge(badge),
+                  child: _badge(
+                    badge,
+                  ),
                 ),
             ],
           ),
@@ -999,19 +1289,27 @@ class _EquipmentPageState extends State<EquipmentPage> {
   // BADGE
   // ============================================================
 
-  Widget _badge(String text) {
+  Widget _badge(
+    String text,
+  ) {
     return Container(
       width: 17,
       height: 17,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Color(0xFFE53935),
-        shape: BoxShape.circle,
+      alignment:
+          Alignment.center,
+      decoration:
+          const BoxDecoration(
+        color:
+            Color(0xFFE53935),
+        shape:
+            BoxShape.circle,
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.white,
+        style:
+            const TextStyle(
+          color:
+              Colors.white,
           fontSize: 9,
           fontWeight:
               FontWeight.w800,
@@ -1037,7 +1335,8 @@ class EquipmentItem {
 
   final String status;
 
-  final String imagePath;
+  final String? imagePath;
+  final String? imageUrl;
 
   const EquipmentItem({
     required this.name,
@@ -1048,6 +1347,132 @@ class EquipmentItem {
     required this.damaged,
     required this.available,
     required this.status,
-    required this.imagePath,
+    this.imagePath,
+    this.imageUrl,
   });
+
+  // ============================================================
+  // FIRESTORE → EQUIPMENT MODEL
+  // ============================================================
+
+  factory EquipmentItem.fromFirestore(
+    DocumentSnapshot document,
+  ) {
+    final data =
+        document.data()
+            as Map<String, dynamic>? ??
+        {};
+
+    final int total =
+        _toInt(data['totalQuantity']);
+
+    final int damaged =
+        _toInt(data['damagedQuantity']);
+
+    final int available =
+        _toInt(
+          data['availableQuantity'],
+        ).clamp(0, total);
+
+    final String name =
+        (data['name'] ?? 'Unnamed Equipment')
+            .toString();
+
+    final String category =
+        _formatCategory(
+      data['category'],
+    );
+
+    final String status =
+        _getStatus(
+      data,
+      available,
+      damaged,
+    );
+
+    return EquipmentItem(
+      name: name,
+      id: (data['equipmentId'] ??
+              document.id)
+          .toString(),
+      category: category,
+      brand:
+          (data['brand'] ?? 'Unknown')
+              .toString(),
+      total: total,
+      damaged: damaged,
+      available: available,
+      status: status,
+      imageUrl:
+          data['imageUrl']?.toString(),
+    );
+  }
+
+  // ============================================================
+  // INTEGER CONVERSION
+  // ============================================================
+
+  static int _toInt(
+    dynamic value,
+  ) {
+    if (value is int) {
+      return value;
+    }
+
+    if (value is double) {
+      return value.toInt();
+    }
+
+    return int.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
+  }
+
+  // ============================================================
+  // CATEGORY FORMAT
+  // ============================================================
+
+  static String _formatCategory(
+    dynamic value,
+  ) {
+    final category =
+        value?.toString() ?? '';
+
+    if (category.isEmpty) {
+      return 'Unknown';
+    }
+
+    return category[0].toUpperCase() +
+        category.substring(1).toLowerCase();
+  }
+
+  // ============================================================
+  // STATUS
+  // ============================================================
+
+  static String _getStatus(
+    Map<String, dynamic> data,
+    int available,
+    int damaged,
+  ) {
+    final savedStatus =
+        data['status']?.toString();
+
+    if (savedStatus != null &&
+        savedStatus.isNotEmpty) {
+      return savedStatus;
+    }
+
+    if (available <= 0 &&
+        damaged > 0) {
+      return 'Maintenance';
+    }
+
+    if (available <= 0) {
+      return 'In Use';
+    }
+
+    return 'Available';
+  }
 }

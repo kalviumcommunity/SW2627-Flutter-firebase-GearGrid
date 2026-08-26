@@ -278,18 +278,34 @@ class LandingPage extends StatelessWidget {
 
           const SizedBox(height: 23),
 
-          // Get Started
-          _primaryButton(
-            text: 'Get Started',
-            icon: Icons.arrow_forward_rounded,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const RegisterPage(),
-                ),
-              );
-            },
+          // Buttons
+          Row(
+            children: [
+              _primaryButton(
+                text: 'Get Started',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 15),
+              _secondaryButton(
+                text: 'Login',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
 
           const SizedBox(height: 30),
@@ -776,6 +792,37 @@ class LandingPage extends StatelessWidget {
                 size: 18,
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _secondaryButton({
+    required String text,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: const BorderSide(color: green, width: 2),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 21,
+            vertical: 13,
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: green,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ),

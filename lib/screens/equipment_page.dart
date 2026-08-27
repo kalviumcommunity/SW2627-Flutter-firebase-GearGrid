@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import 'add_equipment_page.dart';
+import 'equipment_details_page.dart';
 
 class EquipmentPage extends StatefulWidget {
   const EquipmentPage({super.key});
@@ -67,15 +69,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
     if (search.isNotEmpty) {
       result = result.where((item) {
-        return item.name
-                .toLowerCase()
-                .contains(search) ||
-            item.brand
-                .toLowerCase()
-                .contains(search) ||
-            item.id
-                .toLowerCase()
-                .contains(search);
+        return item.name.toLowerCase().contains(search) ||
+            item.brand.toLowerCase().contains(search) ||
+            item.id.toLowerCase().contains(search);
       }).toList();
     }
 
@@ -102,15 +98,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
                       descending: true,
                     )
                     .snapshots(),
-
-                builder: (
-                  context,
-                  snapshot,
-                ) {
-                  // ------------------------------------------------
+                builder: (context, snapshot) {
                   // LOADING
-                  // ------------------------------------------------
-
                   if (snapshot.connectionState ==
                       ConnectionState.waiting) {
                     return const Center(
@@ -120,20 +109,14 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     );
                   }
 
-                  // ------------------------------------------------
                   // ERROR
-                  // ------------------------------------------------
-
                   if (snapshot.hasError) {
                     return _buildErrorState(
                       snapshot.error.toString(),
                     );
                   }
 
-                  // ------------------------------------------------
                   // FIRESTORE DATA
-                  // ------------------------------------------------
-
                   final List<EquipmentItem> equipment =
                       snapshot.data?.docs
                               .map(
@@ -145,23 +128,18 @@ class _EquipmentPageState extends State<EquipmentPage> {
                               .toList() ??
                           [];
 
-                  final filteredEquipment =
-                      _filterEquipment(
-                    equipment,
-                  );
+                  final List<EquipmentItem> filteredEquipment =
+                      _filterEquipment(equipment);
 
                   return SingleChildScrollView(
                     physics:
                         const BouncingScrollPhysics(),
-
-                    padding:
-                        const EdgeInsets.fromLTRB(
+                    padding: const EdgeInsets.fromLTRB(
                       20,
                       14,
                       20,
                       20,
                     ),
-
                     child: Column(
                       crossAxisAlignment:
                           CrossAxisAlignment.start,
@@ -365,6 +343,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
               color: dark,
               size: 29,
             ),
+
             Positioned(
               right: -3,
               top: -5,
@@ -402,7 +381,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
                 fontWeight: FontWeight.w800,
               ),
             ),
+
             SizedBox(height: 2),
+
             Text(
               'Admin',
               style: TextStyle(
@@ -469,12 +450,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     const AddEquipmentPage(),
               ),
             );
-
-            // No manual refresh required.
-            //
-            // StreamBuilder is listening to Firestore,
-            // so the new equipment appears automatically.
           },
+
           child: Container(
             padding:
                 const EdgeInsets.symmetric(
@@ -680,6 +657,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     index;
               });
             },
+
             child: Container(
               padding:
                   const EdgeInsets
@@ -701,6 +679,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
                       : border,
                 ),
               ),
+
               child: Row(
                 children: [
                   Icon(
@@ -803,9 +782,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
               bottom: 14,
             ),
             child:
-                _buildEquipmentCard(
-              item,
-            ),
+                _buildEquipmentCard(item),
           );
         },
       ).toList(),
@@ -842,256 +819,271 @@ class _EquipmentPageState extends State<EquipmentPage> {
           const Color(0xFFFFF0D9);
     }
 
-    return Container(
-      padding:
-          const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color: border,
+    // ==========================================================
+    // THIS MAKES THE WHOLE CARD CLICKABLE
+    // ==========================================================
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                EquipmentDetailsPage(
+              name: item.name,
+              id: item.id,
+              category: item.category,
+              brand: item.brand,
+              total: item.total,
+              damaged: item.damaged,
+              available: item.available,
+              status: item.status,
+              imageUrl: item.imageUrl,
+              imagePath: item.imagePath,
+            ),
+          ),
+        );
+      },
+
+      child: Container(
+        padding:
+            const EdgeInsets.all(14),
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius:
+              BorderRadius.circular(18),
+          border: Border.all(
+            color: border,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x05000000),
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            ),
+          ],
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center,
-        children: [
-          // ======================================================
-          // EQUIPMENT IMAGE
-          // ======================================================
 
-          Container(
-            width: 120,
-            height: 125,
-            decoration: BoxDecoration(
-              color:
-                  const Color(0xFFF8F9FA),
-              borderRadius:
-                  BorderRadius.circular(13),
-            ),
-            child: ClipRRect(
-              borderRadius:
-                  BorderRadius.circular(13),
-              child: item.imageUrl != null &&
-                      item.imageUrl!.isNotEmpty
-                  ? Image.network(
-                      item.imageUrl!,
-                      fit: BoxFit.contain,
-                      errorBuilder:
-                          (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-                        return _assetFallback(
-                          item,
-                        );
-                      },
-                    )
-                  : _assetFallback(
-                      item,
-                    ),
-            ),
-          ),
+        child: Row(
+          crossAxisAlignment:
+              CrossAxisAlignment.center,
+          children: [
+            // ==================================================
+            // EQUIPMENT IMAGE
+            // ==================================================
 
-          const SizedBox(width: 15),
+            Container(
+              width: 120,
+              height: 125,
+              decoration: BoxDecoration(
+                color:
+                    const Color(0xFFF8F9FA),
+                borderRadius:
+                    BorderRadius.circular(13),
+              ),
 
-          // ======================================================
-          // EQUIPMENT INFORMATION
-          // ======================================================
+              child: ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(13),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.name,
-                        maxLines: 2,
-                        overflow:
-                            TextOverflow
-                                .ellipsis,
-                        style:
-                            const TextStyle(
-                          color: dark,
-                          fontSize: 16,
-                          fontWeight:
-                              FontWeight.w800,
-                        ),
-                      ),
-                    ),
-
-                    const Icon(
-                      Icons
-                          .more_vert_rounded,
-                      color: grey,
-                      size: 22,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(
-                  height: 7,
-                ),
-
-                Text(
-                  'ID: ${item.id}   •   ${item.category}   •   ${item.brand}',
-                  maxLines: 2,
-                  overflow:
-                      TextOverflow.ellipsis,
-                  style:
-                      const TextStyle(
-                    color: grey,
-                    fontSize: 10.5,
-                    height: 1.4,
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 15,
-                ),
-
-                Row(
-                  children: [
-                    _quantityColumn(
-                      'Total',
-                      item.total
-                          .toString(),
-                      dark,
-                    ),
-
-                    const SizedBox(
-                      width: 28,
-                    ),
-
-                    _quantityColumn(
-                      'Damaged',
-                      item.damaged
-                          .toString(),
-                      const Color(
-                        0xFFE53935,
-                      ),
-                    ),
-
-                    const SizedBox(
-                      width: 28,
-                    ),
-
-                    _quantityColumn(
-                      'Usable',
-                      usable.toString(),
-                      green,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          // ======================================================
-          // AVAILABILITY
-          // ======================================================
-
-          Container(
-            width: 105,
-            padding:
-                const EdgeInsets.only(
-              left: 13,
-            ),
-            decoration:
-                const BoxDecoration(
-              border: Border(
-                left: BorderSide(
-                  color: border,
-                ),
+                child:
+                    item.imageUrl != null &&
+                            item.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            item.imageUrl!,
+                            fit: BoxFit.contain,
+                            errorBuilder:
+                                (
+                              context,
+                              error,
+                              stackTrace,
+                            ) {
+                              return _assetFallback(
+                                item,
+                              );
+                            },
+                          )
+                        : _assetFallback(item),
               ),
             ),
-            child: Column(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets
-                          .symmetric(
-                    horizontal: 10,
-                    vertical: 7,
+
+            const SizedBox(width: 15),
+
+            // ==================================================
+            // EQUIPMENT INFORMATION
+            // ==================================================
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          maxLines: 2,
+                          overflow:
+                              TextOverflow.ellipsis,
+                          style:
+                              const TextStyle(
+                            color: dark,
+                            fontSize: 16,
+                            fontWeight:
+                                FontWeight.w800,
+                          ),
+                        ),
+                      ),
+
+                      const Icon(
+                        Icons.more_vert_rounded,
+                        color: grey,
+                        size: 22,
+                      ),
+                    ],
                   ),
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        statusBackground,
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                      8,
+
+                  const SizedBox(height: 7),
+
+                  Text(
+                    'ID: ${item.id}   •   ${item.category}   •   ${item.brand}',
+                    maxLines: 2,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style:
+                        const TextStyle(
+                      color: grey,
+                      fontSize: 10.5,
+                      height: 1.4,
                     ),
                   ),
-                  child: Text(
-                    item.status,
-                    textAlign:
-                        TextAlign.center,
+
+                  const SizedBox(height: 15),
+
+                  Row(
+                    children: [
+                      _quantityColumn(
+                        'Total',
+                        item.total.toString(),
+                        dark,
+                      ),
+
+                      const SizedBox(width: 28),
+
+                      _quantityColumn(
+                        'Damaged',
+                        item.damaged.toString(),
+                        const Color(
+                          0xFFE53935,
+                        ),
+                      ),
+
+                      const SizedBox(width: 28),
+
+                      _quantityColumn(
+                        'Usable',
+                        usable.toString(),
+                        green,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 10),
+
+            // ==================================================
+            // AVAILABILITY
+            // ==================================================
+
+            Container(
+              width: 105,
+              padding:
+                  const EdgeInsets.only(
+                left: 13,
+              ),
+
+              decoration:
+                  const BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: border,
+                  ),
+                ),
+              ),
+
+              child: Column(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets
+                            .symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+
+                    decoration:
+                        BoxDecoration(
+                      color:
+                          statusBackground,
+                      borderRadius:
+                          BorderRadius
+                              .circular(8),
+                    ),
+
+                    child: Text(
+                      item.status,
+                      textAlign:
+                          TextAlign.center,
+                      style: TextStyle(
+                        color:
+                            statusColor,
+                        fontSize: 9,
+                        fontWeight:
+                            FontWeight.w800,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    'Available',
+                    style: TextStyle(
+                      color: grey,
+                      fontSize: 11,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    item.available.toString(),
                     style: TextStyle(
                       color:
                           statusColor,
-                      fontSize: 9,
+                      fontSize: 24,
                       fontWeight:
                           FontWeight.w800,
                     ),
                   ),
-                ),
 
-                const SizedBox(
-                  height: 12,
-                ),
-
-                const Text(
-                  'Available',
-                  style: TextStyle(
-                    color: grey,
-                    fontSize: 11,
+                  Text(
+                    '/ ${item.total} Total',
+                    style:
+                        const TextStyle(
+                      color: grey,
+                      fontSize: 10,
+                    ),
                   ),
-                ),
-
-                const SizedBox(
-                  height: 4,
-                ),
-
-                Text(
-                  item.available
-                      .toString(),
-                  style: TextStyle(
-                    color:
-                        statusColor,
-                    fontSize: 24,
-                    fontWeight:
-                        FontWeight.w800,
-                  ),
-                ),
-
-                Text(
-                  '/ ${item.total} Total',
-                  style:
-                      const TextStyle(
-                    color: grey,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1179,6 +1171,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
         8,
         12,
       ),
+
       decoration:
           const BoxDecoration(
         color: Colors.white,
@@ -1188,6 +1181,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
           ),
         ),
       ),
+
       child: Row(
         mainAxisAlignment:
             MainAxisAlignment.spaceAround,
@@ -1249,9 +1243,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
             children: [
               Icon(
                 icon,
-                color: selected
-                    ? green
-                    : grey,
+                color:
+                    selected ? green : grey,
                 size: 24,
               ),
 
@@ -1259,9 +1252,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
                 Positioned(
                   right: -8,
                   top: -7,
-                  child: _badge(
-                    badge,
-                  ),
+                  child: _badge(badge),
                 ),
             ],
           ),
@@ -1271,13 +1262,13 @@ class _EquipmentPageState extends State<EquipmentPage> {
           Text(
             title,
             style: TextStyle(
-              color: selected
-                  ? green
-                  : grey,
+              color:
+                  selected ? green : grey,
               fontSize: 9.5,
-              fontWeight: selected
-                  ? FontWeight.w800
-                  : FontWeight.w500,
+              fontWeight:
+                  selected
+                      ? FontWeight.w800
+                      : FontWeight.w500,
             ),
           ),
         ],
@@ -1297,19 +1288,18 @@ class _EquipmentPageState extends State<EquipmentPage> {
       height: 17,
       alignment:
           Alignment.center,
+
       decoration:
           const BoxDecoration(
-        color:
-            Color(0xFFE53935),
-        shape:
-            BoxShape.circle,
+        color: Color(0xFFE53935),
+        shape: BoxShape.circle,
       ),
+
       child: Text(
         text,
         style:
             const TextStyle(
-          color:
-              Colors.white,
+          color: Colors.white,
           fontSize: 9,
           fontWeight:
               FontWeight.w800,

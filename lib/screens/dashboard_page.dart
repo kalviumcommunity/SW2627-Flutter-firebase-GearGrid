@@ -579,7 +579,7 @@ class DashboardPage extends StatelessWidget {
     final actions = [
       {
         'title': 'New Booking',
-        'icon': Icons.calendar_add_outlined,
+        'icon': Icons.calendar_month_outlined,
       },
       {
         'title': 'Check Availability',

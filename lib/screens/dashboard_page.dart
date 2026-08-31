@@ -557,7 +557,7 @@ class DashboardPage extends StatelessWidget {
         vertical: 7,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(9),
       ),
       child: Text(
@@ -579,7 +579,7 @@ class DashboardPage extends StatelessWidget {
     final actions = [
       {
         'title': 'New Booking',
-        'icon': Icons.calendar_add_outlined,
+        'icon': Icons.edit_calendar_outlined,
       },
       {
         'title': 'Check Availability',

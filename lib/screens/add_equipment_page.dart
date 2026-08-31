@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:image_picker/image_picker.dart';
 
 class AddEquipmentPage extends StatefulWidget {
@@ -1056,5 +1058,81 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
         ),
       ),
     );
+  }
+
+  // ============================================================
+  // SUBMIT
+  // ============================================================
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final total = int.tryParse(
+          totalController.text.trim(),
+        ) ??
+        0;
+
+    final damaged = int.tryParse(
+          damagedController.text.trim(),
+        ) ??
+        0;
+
+    if (damaged < 0 ||
+        damaged > total) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Damaged quantity cannot be greater than total quantity.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    final available = total - damaged;
+    final status = available > 0 ? 'Available' : 'Maintenance';
+
+    try {
+      await FirebaseFirestore.instance.collection('equipment').add({
+        'name': nameController.text.trim(),
+        'id': idController.text.trim(),
+        'category': selectedCategory,
+        'brand': brandController.text.trim(),
+        'total': total,
+        'damaged': damaged,
+        'available': available,
+        'status': status,
+        'imagePath': 'assets/equipment/jbl_pa_speaker.png', // Default image or user provided later
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Equipment added successfully.',
+          ),
+          backgroundColor: green,
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add equipment: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

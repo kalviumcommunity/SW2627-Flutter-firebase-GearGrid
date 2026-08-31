@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'equipment_page.dart';
+import 'booking/date_selection_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -44,7 +46,7 @@ class DashboardPage extends StatelessWidget {
 
                     _buildSectionTitle('Quick Actions'),
                     const SizedBox(height: 12),
-                    _buildQuickActions(),
+                    _buildQuickActions(context),
 
                     const SizedBox(height: 28),
 
@@ -575,11 +577,12 @@ class DashboardPage extends StatelessWidget {
   // QUICK ACTIONS
   // ------------------------------------------------------------
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     final actions = [
       {
         'title': 'New Booking',
         'icon': Icons.edit_calendar_outlined,
+        'icon': Icons.calendar_today_outlined,
       },
       {
         'title': 'Check Availability',
@@ -600,10 +603,28 @@ class DashboardPage extends StatelessWidget {
         actions.length,
         (index) {
           return Expanded(
-            child: Container(
-              margin: EdgeInsets.only(
-                right: index == actions.length - 1 ? 0 : 7,
-              ),
+            child: GestureDetector(
+              onTap: () {
+                if (actions[index]['title'] == 'New Booking') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DateSelectionPage(),
+                    ),
+                  );
+                } else if (actions[index]['title'] == 'Equipment') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EquipmentPage(),
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                margin: EdgeInsets.only(
+                  right: index == actions.length - 1 ? 0 : 7,
+                ),
               padding: const EdgeInsets.symmetric(
                 vertical: 14,
                 horizontal: 4,

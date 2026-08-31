@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:image_picker/image_picker.dart';
 
 class AddEquipmentPage extends StatefulWidget {
   const AddEquipmentPage({super.key});
@@ -10,8 +15,7 @@ class AddEquipmentPage extends StatefulWidget {
       _AddEquipmentPageState();
 }
 
-class _AddEquipmentPageState
-    extends State<AddEquipmentPage> {
+class _AddEquipmentPageState extends State<AddEquipmentPage> {
   static const Color green = Color(0xFF16845F);
   static const Color dark = Color(0xFF101B2D);
   static const Color grey = Color(0xFF667085);
@@ -32,9 +36,15 @@ class _AddEquipmentPageState
       TextEditingController();
 
   final TextEditingController damagedController =
-      TextEditingController();
+      TextEditingController(text: '0');
 
   String selectedCategory = 'Sound';
+
+  File? selectedImage;
+
+  bool isSaving = false;
+
+  final ImagePicker imagePicker = ImagePicker();
 
   @override
   void dispose() {
@@ -45,6 +55,259 @@ class _AddEquipmentPageState
     damagedController.dispose();
 
     super.dispose();
+  }
+
+  // ============================================================
+  // PICK IMAGE
+  // ============================================================
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image =
+          await imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image == null) {
+        return;
+      }
+
+      setState(() {
+        selectedImage = File(image.path);
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to select image: $e',
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // REMOVE IMAGE
+  // ============================================================
+
+  void _removeImage() {
+    setState(() {
+      selectedImage = null;
+    });
+  }
+
+  // ============================================================
+  // UPLOAD IMAGE TO FIREBASE STORAGE
+  // ============================================================
+
+  Future<String?> _uploadImage(String equipmentId) async {
+    if (selectedImage == null) {
+      return null;
+    }
+
+    final String fileName =
+        '${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final Reference storageReference =
+        FirebaseStorage.instance
+            .ref()
+            .child('equipment')
+            .child(equipmentId)
+            .child(fileName);
+
+    final UploadTask uploadTask =
+        storageReference.putFile(selectedImage!);
+
+    final TaskSnapshot snapshot =
+        await uploadTask;
+
+    return await snapshot.ref.getDownloadURL();
+  }
+
+  // ============================================================
+  // SUBMIT FORM
+  // ============================================================
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final int total =
+        int.tryParse(
+              totalController.text.trim(),
+            ) ??
+            0;
+
+    final int damaged =
+        int.tryParse(
+              damagedController.text.trim(),
+            ) ??
+            0;
+
+    if (damaged < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Damaged quantity cannot be negative.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (damaged > total) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Damaged quantity cannot be greater than total quantity.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      isSaving = true;
+    });
+
+    String? uploadedImagePath;
+
+    try {
+      // --------------------------------------------------------
+      // CREATE FIRESTORE DOCUMENT REFERENCE
+      // --------------------------------------------------------
+
+      final DocumentReference equipmentReference =
+          FirebaseFirestore.instance
+              .collection('equipment')
+              .doc();
+
+      final String firestoreId =
+          equipmentReference.id;
+
+      // --------------------------------------------------------
+      // UPLOAD IMAGE
+      // --------------------------------------------------------
+
+      String? imageUrl;
+
+      if (selectedImage != null) {
+        final String fileName =
+            '${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        final Reference storageReference =
+            FirebaseStorage.instance
+                .ref()
+                .child('equipment')
+                .child(firestoreId)
+                .child(fileName);
+
+        uploadedImagePath =
+            storageReference.fullPath;
+
+        final UploadTask uploadTask =
+            storageReference.putFile(selectedImage!);
+
+        final TaskSnapshot snapshot =
+            await uploadTask;
+
+        imageUrl =
+            await snapshot.ref.getDownloadURL();
+      }
+
+      // --------------------------------------------------------
+      // SAVE EQUIPMENT TO FIRESTORE
+      // --------------------------------------------------------
+
+      final Map<String, dynamic> equipmentData = {
+        'name': nameController.text.trim(),
+
+        'equipmentId':
+            idController.text.trim(),
+
+        'category':
+            selectedCategory.toLowerCase(),
+
+        'brand':
+            brandController.text.trim(),
+
+        'totalQuantity':
+            total,
+
+        'damagedQuantity':
+            damaged,
+
+        'availableQuantity':
+            total - damaged,
+
+        'imageUrl':
+            imageUrl,
+
+        'createdAt':
+            FieldValue.serverTimestamp(),
+      };
+
+      await equipmentReference.set(
+        equipmentData,
+      );
+
+      // --------------------------------------------------------
+      // SUCCESS
+      // --------------------------------------------------------
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Equipment added successfully.',
+          ),
+          backgroundColor: green,
+        ),
+      );
+
+      // true tells EquipmentPage that a new item was added.
+      Navigator.pop(
+        context,
+        true,
+      );
+    } catch (e) {
+      // --------------------------------------------------------
+      // CLEAN UP IMAGE IF FIRESTORE FAILED
+      // --------------------------------------------------------
+
+      if (uploadedImagePath != null) {
+        try {
+          await FirebaseStorage.instance
+              .ref(uploadedImagePath!)
+              .delete();
+        } catch (_) {
+          // Ignore cleanup failure.
+        }
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to add equipment: $e',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSaving = false;
+        });
+      }
+    }
   }
 
   @override
@@ -61,9 +324,11 @@ class _AddEquipmentPageState
             Icons.arrow_back_rounded,
             color: dark,
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: isSaving
+              ? null
+              : () {
+                  Navigator.pop(context);
+                },
         ),
 
         title: const Text(
@@ -89,7 +354,8 @@ class _AddEquipmentPageState
                   physics:
                       const BouncingScrollPhysics(),
 
-                  padding: const EdgeInsets.fromLTRB(
+                  padding:
+                      const EdgeInsets.fromLTRB(
                     20,
                     10,
                     20,
@@ -129,7 +395,8 @@ class _AddEquipmentPageState
                       ),
 
                       _textField(
-                        controller: nameController,
+                        controller:
+                            nameController,
                         hint:
                             'Enter equipment name',
                         icon:
@@ -149,10 +416,12 @@ class _AddEquipmentPageState
                       _label('Equipment ID'),
 
                       _textField(
-                        controller: idController,
+                        controller:
+                            idController,
                         hint:
                             'Example: AUD-007',
-                        icon: Icons.tag_rounded,
+                        icon:
+                            Icons.tag_rounded,
                       ),
 
                       const SizedBox(height: 20),
@@ -169,7 +438,8 @@ class _AddEquipmentPageState
                       _label('Brand'),
 
                       _textField(
-                        controller: brandController,
+                        controller:
+                            brandController,
                         hint:
                             'Enter brand name',
                         icon:
@@ -187,7 +457,6 @@ class _AddEquipmentPageState
                             child: Column(
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
-
                               children: [
                                 _label(
                                   'Total Quantity',
@@ -229,7 +498,6 @@ class _AddEquipmentPageState
                             child: Column(
                               crossAxisAlignment:
                                   CrossAxisAlignment.start,
-
                               children: [
                                 _label(
                                   'Damaged Quantity',
@@ -244,6 +512,21 @@ class _AddEquipmentPageState
                                   keyboardType:
                                       TextInputType
                                           .number,
+                                  validator:
+                                      (value) {
+                                    final number =
+                                        int.tryParse(
+                                      value ?? '0',
+                                    );
+
+                                    if (number ==
+                                            null ||
+                                        number < 0) {
+                                      return 'Invalid';
+                                    }
+
+                                    return null;
+                                  },
                                 ),
                               ],
                             ),
@@ -253,25 +536,20 @@ class _AddEquipmentPageState
 
                       const SizedBox(height: 24),
 
-                      _label('Equipment Image'),
+                      _label(
+                        'Equipment Image',
+                      ),
 
                       const SizedBox(height: 4),
 
                       GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Image upload will be connected to Firebase Storage.',
-                              ),
-                            ),
-                          );
-                        },
+                        onTap: isSaving
+                            ? null
+                            : _pickImage,
 
                         child: Container(
-                          width: double.infinity,
+                          width:
+                              double.infinity,
                           height: 145,
 
                           decoration:
@@ -282,11 +560,13 @@ class _AddEquipmentPageState
                             ),
 
                             borderRadius:
-                                BorderRadius.circular(
+                                BorderRadius
+                                    .circular(
                               15,
                             ),
 
-                            border: Border.all(
+                            border:
+                                Border.all(
                               color:
                                   const Color(
                                 0xFFD9DEE5,
@@ -294,66 +574,11 @@ class _AddEquipmentPageState
                             ),
                           ),
 
-                          child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment
-                                    .center,
-
-                            children: [
-                              Container(
-                                width: 52,
-                                height: 52,
-
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      const Color(
-                                    0xFFEAF7F1,
-                                  ),
-
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                    14,
-                                  ),
-                                ),
-
-                                child:
-                                    const Icon(
-                                  Icons
-                                      .add_photo_alternate_outlined,
-                                  color: green,
-                                  size: 27,
-                                ),
-                              ),
-
-                              const SizedBox(
-                                height: 10,
-                              ),
-
-                              const Text(
-                                'Add Equipment Image',
-                                style: TextStyle(
-                                  color: dark,
-                                  fontSize: 13,
-                                  fontWeight:
-                                      FontWeight.w700,
-                                ),
-                              ),
-
-                              const SizedBox(
-                                height: 4,
-                              ),
-
-                              const Text(
-                                'PNG or JPG',
-                                style: TextStyle(
-                                  color: grey,
-                                  fontSize: 10.5,
-                                ),
-                              ),
-                            ],
-                          ),
+                          child:
+                              selectedImage ==
+                                      null
+                                  ? _imagePlaceholder()
+                                  : _selectedImagePreview(),
                         ),
                       ),
 
@@ -363,9 +588,9 @@ class _AddEquipmentPageState
                 ),
               ),
 
-              // ==================================================
+              // =================================================
               // BOTTOM BUTTONS
-              // ==================================================
+              // =================================================
 
               Container(
                 padding:
@@ -393,14 +618,15 @@ class _AddEquipmentPageState
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(
-                            context,
-                          );
-                        },
+                        onPressed: isSaving
+                            ? null
+                            : () {
+                                Navigator.pop(
+                                  context,
+                                );
+                              },
 
-                        style:
-                            OutlinedButton.styleFrom(
+                        style: OutlinedButton.styleFrom(
                           minimumSize:
                               const Size(
                             double.infinity,
@@ -437,8 +663,9 @@ class _AddEquipmentPageState
 
                     Expanded(
                       child: ElevatedButton(
-                        onPressed:
-                            _submitForm,
+                        onPressed: isSaving
+                            ? null
+                            : _submitForm,
 
                         style:
                             ElevatedButton.styleFrom(
@@ -465,14 +692,27 @@ class _AddEquipmentPageState
                           ),
                         ),
 
-                        child: const Text(
-                          'Add Equipment',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight:
-                                FontWeight.w800,
-                          ),
-                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child:
+                                    CircularProgressIndicator(
+                                  color:
+                                      Colors.white,
+                                  strokeWidth:
+                                      2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Add Equipment',
+                                style:
+                                    TextStyle(
+                                  fontSize: 13,
+                                  fontWeight:
+                                      FontWeight.w800,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -486,6 +726,101 @@ class _AddEquipmentPageState
   }
 
   // ============================================================
+  // IMAGE PLACEHOLDER
+  // ============================================================
+
+  Widget _imagePlaceholder() {
+    return Column(
+      mainAxisAlignment:
+          MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color:
+                const Color(0xFFEAF7F1),
+            borderRadius:
+                BorderRadius.circular(14),
+          ),
+          child: const Icon(
+            Icons
+                .add_photo_alternate_outlined,
+            color: green,
+            size: 27,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        const Text(
+          'Add Equipment Image',
+          style: TextStyle(
+            color: dark,
+            fontSize: 13,
+            fontWeight:
+                FontWeight.w700,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        const Text(
+          'PNG or JPG',
+          style: TextStyle(
+            color: grey,
+            fontSize: 10.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // SELECTED IMAGE PREVIEW
+  // ============================================================
+
+  Widget _selectedImagePreview() {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius:
+              BorderRadius.circular(15),
+          child: Image.file(
+            selectedImage!,
+            width:
+                double.infinity,
+            height: 145,
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: _removeImage,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration:
+                  const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                size: 19,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
   // LABEL
   // ============================================================
 
@@ -495,13 +830,15 @@ class _AddEquipmentPageState
   }) {
     return Padding(
       padding:
-          const EdgeInsets.only(bottom: 8),
-
+          const EdgeInsets.only(
+        bottom: 8,
+      ),
       child: RichText(
         text: TextSpan(
           text: text,
 
-          style: const TextStyle(
+          style:
+              const TextStyle(
             color: dark,
             fontSize: 12,
             fontWeight:
@@ -512,7 +849,8 @@ class _AddEquipmentPageState
             if (required)
               const TextSpan(
                 text: ' *',
-                style: TextStyle(
+                style:
+                    TextStyle(
                   color: Colors.red,
                 ),
               ),
@@ -527,35 +865,45 @@ class _AddEquipmentPageState
   // ============================================================
 
   Widget _textField({
-    required TextEditingController controller,
+    required
+        TextEditingController
+            controller,
     required String hint,
     required IconData icon,
     TextInputType keyboardType =
         TextInputType.text,
-    String? Function(String?)? validator,
+    String? Function(String?)?
+        validator,
   }) {
     return TextFormField(
       controller: controller,
 
-      keyboardType: keyboardType,
+      keyboardType:
+          keyboardType,
 
-      validator: validator,
+      validator:
+          validator,
 
-      style: const TextStyle(
+      style:
+          const TextStyle(
         color: dark,
         fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight:
+            FontWeight.w500,
       ),
 
-      decoration: InputDecoration(
+      decoration:
+          InputDecoration(
         hintText: hint,
 
-        hintStyle: const TextStyle(
+        hintStyle:
+            const TextStyle(
           color: grey,
           fontSize: 12,
         ),
 
-        prefixIcon: Icon(
+        prefixIcon:
+            Icon(
           icon,
           color: grey,
           size: 21,
@@ -563,10 +911,12 @@ class _AddEquipmentPageState
 
         filled: true,
 
-        fillColor: Colors.white,
+        fillColor:
+            Colors.white,
 
         contentPadding:
-            const EdgeInsets.symmetric(
+            const EdgeInsets
+                .symmetric(
           horizontal: 14,
           vertical: 15,
         ),
@@ -574,7 +924,9 @@ class _AddEquipmentPageState
         enabledBorder:
             OutlineInputBorder(
           borderRadius:
-              BorderRadius.circular(13),
+              BorderRadius.circular(
+            13,
+          ),
 
           borderSide:
               const BorderSide(
@@ -585,7 +937,9 @@ class _AddEquipmentPageState
         focusedBorder:
             OutlineInputBorder(
           borderRadius:
-              BorderRadius.circular(13),
+              BorderRadius.circular(
+            13,
+          ),
 
           borderSide:
               const BorderSide(
@@ -597,7 +951,9 @@ class _AddEquipmentPageState
         errorBorder:
             OutlineInputBorder(
           borderRadius:
-              BorderRadius.circular(13),
+              BorderRadius.circular(
+            13,
+          ),
 
           borderSide:
               const BorderSide(
@@ -608,7 +964,9 @@ class _AddEquipmentPageState
         focusedErrorBorder:
             OutlineInputBorder(
           borderRadius:
-              BorderRadius.circular(13),
+              BorderRadius.circular(
+            13,
+          ),
 
           borderSide:
               const BorderSide(
@@ -629,17 +987,22 @@ class _AddEquipmentPageState
       height: 54,
 
       padding:
-          const EdgeInsets.symmetric(
+          const EdgeInsets
+              .symmetric(
         horizontal: 15,
       ),
 
-      decoration: BoxDecoration(
+      decoration:
+          BoxDecoration(
         color: Colors.white,
 
         borderRadius:
-            BorderRadius.circular(13),
+            BorderRadius.circular(
+          13,
+        ),
 
-        border: Border.all(
+        border:
+            Border.all(
           color: border,
         ),
       ),
@@ -648,40 +1011,50 @@ class _AddEquipmentPageState
           DropdownButtonHideUnderline(
         child:
             DropdownButton<String>(
-          value: selectedCategory,
+          value:
+              selectedCategory,
 
           isExpanded: true,
 
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
+          icon:
+              const Icon(
+            Icons
+                .keyboard_arrow_down_rounded,
             color: grey,
           ),
 
           items: const [
             DropdownMenuItem(
               value: 'Sound',
-              child: Text('Sound'),
+              child:
+                  Text('Sound'),
             ),
 
             DropdownMenuItem(
               value: 'Lighting',
-              child: Text('Lighting'),
+              child:
+                  Text('Lighting'),
             ),
 
             DropdownMenuItem(
               value: 'Furniture',
-              child: Text('Furniture'),
+              child:
+                  Text('Furniture'),
             ),
           ],
 
-          onChanged: (value) {
-            if (value != null) {
-              setState(() {
-                selectedCategory =
-                    value;
-              });
-            }
-          },
+          onChanged:
+              isSaving
+                  ? null
+                  : (value) {
+                      if (value !=
+                          null) {
+                        setState(() {
+                          selectedCategory =
+                              value;
+                        });
+                      }
+                    },
         ),
       ),
     );

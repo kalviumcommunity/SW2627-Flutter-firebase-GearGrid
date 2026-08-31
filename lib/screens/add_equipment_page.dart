@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class AddEquipmentPage extends StatefulWidget {
   const AddEquipmentPage({super.key});
@@ -689,7 +691,7 @@ class _AddEquipmentPageState
   // SUBMIT
   // ============================================================
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -719,17 +721,45 @@ class _AddEquipmentPageState
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Equipment added successfully.',
-        ),
-        backgroundColor: green,
-      ),
-    );
+    final available = total - damaged;
+    final status = available > 0 ? 'Available' : 'Maintenance';
 
-    Navigator.pop(context);
+    try {
+      await FirebaseFirestore.instance.collection('equipment').add({
+        'name': nameController.text.trim(),
+        'id': idController.text.trim(),
+        'category': selectedCategory,
+        'brand': brandController.text.trim(),
+        'total': total,
+        'damaged': damaged,
+        'available': available,
+        'status': status,
+        'imagePath': 'assets/equipment/jbl_pa_speaker.png', // Default image or user provided later
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Equipment added successfully.',
+          ),
+          backgroundColor: green,
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add equipment: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

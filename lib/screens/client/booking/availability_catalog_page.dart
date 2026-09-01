@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../state/booking_draft_provider.dart';
+import '../../../state/booking_draft_provider.dart';
 import 'booking_summary_page.dart';
 
 // Note: Re-using a simple mock model for UI building

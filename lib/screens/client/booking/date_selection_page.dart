@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../state/booking_draft_provider.dart';
+import '../../../state/booking_draft_provider.dart';
 import 'availability_catalog_page.dart';
 
 class DateSelectionPage extends ConsumerStatefulWidget {

@@ -24,8 +24,9 @@ class BookingDraft {
   }
 }
 
-class BookingDraftNotifier extends StateNotifier<BookingDraft> {
-  BookingDraftNotifier() : super(BookingDraft());
+class BookingDraftNotifier extends Notifier<BookingDraft> {
+  @override
+  BookingDraft build() => BookingDraft();
 
   void setDates(DateTime start, DateTime end) {
     state = state.copyWith(startDate: start, endDate: end);
@@ -47,6 +48,6 @@ class BookingDraftNotifier extends StateNotifier<BookingDraft> {
 }
 
 final bookingDraftProvider =
-    StateNotifierProvider<BookingDraftNotifier, BookingDraft>((ref) {
+    NotifierProvider<BookingDraftNotifier, BookingDraft>(() {
   return BookingDraftNotifier();
 });

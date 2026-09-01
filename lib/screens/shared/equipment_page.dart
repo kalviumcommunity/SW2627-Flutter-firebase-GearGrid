@@ -1,11 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'add_equipment_page.dart';
+import '../admin/add_equipment_page.dart';
+import '../admin/edit_equipment_page.dart';
 import 'equipment_details_page.dart';
 
 class EquipmentPage extends StatefulWidget {
-  const EquipmentPage({super.key});
+  final bool showBottomNav;
+  const EquipmentPage({
+    super.key,
+    this.showBottomNav = true,
+  });
 
   @override
   State<EquipmentPage> createState() => _EquipmentPageState();
@@ -179,7 +184,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
               ),
             ),
 
-            _buildBottomNavigation(),
+            if (widget.showBottomNav) _buildBottomNavigation(),
           ],
         ),
       ),
@@ -937,10 +942,72 @@ class _EquipmentPageState extends State<EquipmentPage> {
                         ),
                       ),
 
-                      const Icon(
-                        Icons.more_vert_rounded,
-                        color: grey,
-                        size: 22,
+                      // ── Edit / Delete popup ──────────────────
+                      PopupMenuButton<String>(
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditEquipmentPage(
+                                  firestoreDocId:
+                                      item.firestoreDocId,
+                                  name: item.name,
+                                  equipmentId: item.id,
+                                  category: item.category,
+                                  brand: item.brand,
+                                  total: item.total,
+                                  damaged: item.damaged,
+                                  imageUrl: item.imageUrl,
+                                ),
+                              ),
+                            );
+                          } else if (value == 'delete') {
+                            _confirmDelete(context, item);
+                          }
+                        },
+                        offset: const Offset(0, 30),
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(12)),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit_outlined,
+                                    size: 18,
+                                    color: Color(0xFF2878E8)),
+                                SizedBox(width: 8),
+                                Text('Edit',
+                                    style: TextStyle(
+                                        fontWeight:
+                                            FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline_rounded,
+                                    size: 18,
+                                    color: Color(0xFFE53935)),
+                                SizedBox(width: 8),
+                                Text('Delete',
+                                    style: TextStyle(
+                                        color: Color(0xFFE53935),
+                                        fontWeight:
+                                            FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        ],
+                        child: const Icon(
+                          Icons.more_vert_rounded,
+                          color: grey,
+                          size: 22,
+                        ),
                       ),
                     ],
                   ),
@@ -1307,6 +1374,78 @@ class _EquipmentPageState extends State<EquipmentPage> {
       ),
     );
   }
+
+  // ============================================================
+  // CONFIRM & DELETE EQUIPMENT
+  // ============================================================
+
+  void _confirmDelete(
+    BuildContext ctx,
+    EquipmentItem item,
+  ) {
+    showDialog(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Delete Equipment?',
+          style: TextStyle(
+              color: dark,
+              fontSize: 17,
+              fontWeight: FontWeight.w800),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${item.name}"? This cannot be undone.',
+          style: const TextStyle(color: grey, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel',
+                style: TextStyle(color: grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              try {
+                await FirebaseFirestore.instance
+                    .collection('equipment')
+                    .doc(item.firestoreDocId)
+                    .delete();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text('"${item.name}" deleted.'),
+                    backgroundColor:
+                        const Color(0xFFE53935),
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text('Failed to delete: $e')),
+                );
+              }
+            },
+            child: const Text('Delete',
+                style: TextStyle(
+                    fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ================================================================
@@ -1314,8 +1453,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
 // ================================================================
 
 class EquipmentItem {
+  final String firestoreDocId; // actual Firestore document ID
   final String name;
-  final String id;
+  final String id; // equipmentId field value
   final String category;
   final String brand;
 
@@ -1329,6 +1469,7 @@ class EquipmentItem {
   final String? imageUrl;
 
   const EquipmentItem({
+    required this.firestoreDocId,
     required this.name,
     required this.id,
     required this.category,
@@ -1381,6 +1522,7 @@ class EquipmentItem {
     );
 
     return EquipmentItem(
+      firestoreDocId: document.id,
       name: name,
       id: (data['equipmentId'] ??
               document.id)

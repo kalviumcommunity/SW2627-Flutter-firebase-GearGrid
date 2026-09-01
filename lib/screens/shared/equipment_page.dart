@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../admin/add_equipment_page.dart';
 import '../admin/edit_equipment_page.dart';
@@ -620,11 +621,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
         scrollDirection:
             Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder:
-            (_, __) {
-          return const SizedBox(
-            width: 12,
-          );
+        separatorBuilder: (_, _) {
+          return const SizedBox(width: 12);
         },
         itemBuilder:
             (context, index) {
@@ -775,22 +773,66 @@ class _EquipmentPageState extends State<EquipmentPage> {
   // EQUIPMENT LIST
   // ============================================================
 
-  Widget _buildEquipmentList(
-    List<EquipmentItem> equipment,
-  ) {
-    return Column(
-      children: equipment.map(
-        (item) {
-          return Padding(
-            padding:
-                const EdgeInsets.only(
-              bottom: 14,
+  Widget _buildEquipmentList() {
+    Query query = FirebaseFirestore.instance.collection('equipment').orderBy('createdAt', descending: true);
+    
+    if (selectedCategory != 0) {
+      query = query.where('category', isEqualTo: categories[selectedCategory]);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40.0),
+              child: CircularProgressIndicator(color: green),
             ),
-            child:
-                _buildEquipmentCard(item),
           );
-        },
-      ).toList(),
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40.0),
+              child: Text(
+                'No equipment found.',
+                style: TextStyle(color: grey),
+              ),
+            ),
+          );
+        }
+
+        final docs = snapshot.data!.docs;
+
+        return Column(
+          children: docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final item = EquipmentItem(
+              name: data['name'] ?? '',
+              id: data['id'] ?? '',
+              category: data['category'] ?? '',
+              brand: data['brand'] ?? '',
+              total: data['total'] ?? 0,
+              damaged: data['damaged'] ?? 0,
+              available: data['available'] ?? 0,
+              status: data['status'] ?? 'Available',
+              imagePath: data['imagePath'] ?? 'assets/equipment/jbl_pa_speaker.png',
+            );
+            return Padding(
+              padding: const EdgeInsets.only(
+                bottom: 14,
+              ),
+              child: _buildEquipmentCard(item),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 

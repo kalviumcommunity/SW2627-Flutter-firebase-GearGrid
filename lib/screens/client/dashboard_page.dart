@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'equipment_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/auth_service.dart';
+import '../shared/equipment_page.dart';
 import 'booking/date_selection_page.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   static const Color green = Color(0xFF16845F);
@@ -11,7 +13,7 @@ class DashboardPage extends StatelessWidget {
   static const Color border = Color(0xFFE6E9ED);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -91,7 +93,7 @@ class DashboardPage extends StatelessWidget {
   // HEADER
   // ------------------------------------------------------------
 
-  Widget _buildHeader() {
+  Widget _buildHeader(WidgetRef ref) {
     return Row(
       children: [
         const Icon(
@@ -154,20 +156,35 @@ class DashboardPage extends StatelessWidget {
 
         const SizedBox(width: 14),
 
-        const CircleAvatar(
-          radius: 21,
-          backgroundColor: green,
-          child: Text(
-            'A',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 17,
+        PopupMenuButton<String>(
+          onSelected: (value) async {
+            if (value == 'logout') {
+              await ref.read(authServiceProvider).signOut();
+            }
+          },
+          offset: const Offset(0, 45),
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'logout',
+              child: Text('Sign Out'),
             ),
-          ),
-        ),
+          ],
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 21,
+                backgroundColor: green,
+                child: Text(
+                  'A',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                  ),
+                ),
+              ),
 
-        const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,12 +210,15 @@ class DashboardPage extends StatelessWidget {
           ],
         ),
 
-        const SizedBox(width: 2),
+              const SizedBox(width: 2),
 
-        const Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: grey,
-          size: 20,
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: grey,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -318,7 +338,7 @@ class DashboardPage extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio: 1.42,
+      childAspectRatio: 1.20, // Reduced ratio to give cards more vertical space
       children: [
         _buildMetricCard(
           icon: Icons.calendar_month_rounded,
@@ -645,38 +665,39 @@ class DashboardPage extends StatelessWidget {
                 margin: EdgeInsets.only(
                   right: index == actions.length - 1 ? 0 : 7,
                 ),
-              padding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(17),
-                border: Border.all(
-                  color: border,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 4,
                 ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    actions[index]['icon'] as IconData,
-                    color: green,
-                    size: 25,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(
+                    color: border,
                   ),
-
-                  const SizedBox(height: 7),
-
-                  Text(
-                    actions[index]['title'] as String,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: const TextStyle(
-                      color: dark,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      actions[index]['icon'] as IconData,
+                      color: green,
+                      size: 25,
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 7),
+
+                    Text(
+                      actions[index]['title'] as String,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      style: const TextStyle(
+                        color: dark,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

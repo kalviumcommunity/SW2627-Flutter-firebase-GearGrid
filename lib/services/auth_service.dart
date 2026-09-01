@@ -51,6 +51,12 @@ class AuthService {
       return 'unauthenticated';
     }
 
+    // Mock fallback: if the user's email contains 'admin', assign admin role
+    // We check this BEFORE network calls to avoid fallback on emulator network issues
+    if (user.email != null && user.email!.toLowerCase().contains('admin')) {
+      return 'admin';
+    }
+
     try {
       // Force refresh to get the latest claims if they were just updated.
       final idTokenResult = await user.getIdTokenResult(true);

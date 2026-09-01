@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/auth_service.dart';
-import 'register_page.dart';
+import '../../services/auth_service.dart';
+import 'login_page.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends ConsumerStatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
   // Option 2 - GearGrid colors
@@ -29,16 +33,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _createAccount() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await ref.read(authServiceProvider).signInWithEmailAndPassword(
+        await ref.read(authServiceProvider).registerWithEmailAndPassword(
               _emailController.text.trim(),
               _passwordController.text,
             );
@@ -276,13 +282,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         children: [
                           TextSpan(
-                            text: 'Welcome ',
+                            text: 'Create ',
                             style: TextStyle(
                               color: darkText,
                             ),
                           ),
                           TextSpan(
-                            text: 'Back',
+                            text: 'Account',
                             style: TextStyle(
                               color: primaryGreen,
                             ),
@@ -294,7 +300,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     const SizedBox(height: 8),
 
                     const Text(
-                      'Log in to GearGrid to manage your event equipment rentals.',
+                      'Join GearGrid and start renting the best '
+                      'equipment for your events.',
                       style: TextStyle(
                         color: greyText,
                         fontSize: 15,
@@ -303,6 +310,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
 
                     const SizedBox(height: 28),
+
+                    // Full Name
+                    _buildLabel('Full Name'),
+
+                    TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: _inputDecoration(
+                        hintText: 'Enter your full name',
+                        icon: Icons.person_outline_rounded,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 18),
 
                     // Email
                     _buildLabel('Email'),
@@ -337,9 +364,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
+                      textInputAction: TextInputAction.next,
                       decoration: _inputDecoration(
-                        hintText: 'Enter your password',
+                        hintText: 'Create a password',
                         icon: Icons.lock_outline_rounded,
                         suffixIcon: IconButton(
                           onPressed: () {
@@ -357,41 +384,65 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
+                          return 'Please enter a password';
+                        }
+
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
                         }
 
                         return null;
                       },
                     ),
-                    
-                    const SizedBox(height: 10),
-                    
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          // Forgot password logic
-                        },
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: primaryGreen,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+
+                    const SizedBox(height: 18),
+
+                    // Confirm Password
+                    _buildLabel('Confirm Password'),
+
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      textInputAction: TextInputAction.done,
+                      decoration: _inputDecoration(
+                        hintText: 'Confirm your password',
+                        icon: Icons.lock_outline_rounded,
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: greyText,
                           ),
                         ),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+
+                        if (value != _passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+
+                        return null;
+                      },
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Login button
+                    // Create Account button
                     SizedBox(
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login,
+                        onPressed: _isLoading ? null : _createAccount,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryGreen,
                           foregroundColor: Colors.white,
@@ -413,7 +464,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Login',
+                                    'Create Account',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -488,13 +539,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                     const SizedBox(height: 24),
 
-                    // Sign Up link
+                    // Login link
                     Center(
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         children: [
                           const Text(
-                            'Don\'t have an account? ',
+                            'Already have an account? ',
                             style: TextStyle(
                               color: greyText,
                               fontSize: 14,
@@ -505,12 +556,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const RegisterPage(),
+                                  builder: (context) => const LoginPage(),
                                 ),
                               );
                             },
                             child: const Text(
-                              'Sign Up',
+                              'Login',
                               style: TextStyle(
                                 color: primaryGreen,
                                 fontSize: 14,

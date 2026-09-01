@@ -22,17 +22,27 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  16,
+                  20,
+                  24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(ref),
+                    _buildHeader(),
+
                     const SizedBox(height: 24),
+
                     _buildGreeting(),
+
                     const SizedBox(height: 24),
 
                     _buildSectionTitle('Overview'),
+
                     const SizedBox(height: 12),
+
                     _buildOverview(),
 
                     const SizedBox(height: 28),
@@ -41,12 +51,15 @@ class DashboardPage extends ConsumerWidget {
                       'Upcoming Dispatches',
                       action: 'View all',
                     ),
+
                     const SizedBox(height: 12),
+
                     _buildDispatches(),
 
                     const SizedBox(height: 28),
 
                     _buildSectionTitle('Quick Actions'),
+
                     const SizedBox(height: 12),
                     _buildQuickActions(context),
 
@@ -56,14 +69,20 @@ class DashboardPage extends ConsumerWidget {
                       'Alerts & Notifications',
                       action: 'View all',
                     ),
+
                     const SizedBox(height: 12),
+
                     _buildAlerts(),
                   ],
                 ),
               ),
             ),
 
-            _buildBottomNavigation(),
+            // ------------------------------------------------
+            // BOTTOM NAVIGATION
+            // ------------------------------------------------
+
+            _buildBottomNavigation(context),
           ],
         ),
       ),
@@ -126,6 +145,7 @@ class DashboardPage extends ConsumerWidget {
               color: dark,
               size: 28,
             ),
+
             Positioned(
               right: -2,
               top: -4,
@@ -166,27 +186,29 @@ class DashboardPage extends ConsumerWidget {
 
               const SizedBox(width: 8),
 
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Arjun',
-                    style: TextStyle(
-                      color: dark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Client',
-                    style: TextStyle(
-                      color: grey,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Arjun',
+              style: TextStyle(
+                color: dark,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
+            ),
+
+            SizedBox(height: 2),
+
+            Text(
+              'Admin',
+              style: TextStyle(
+                color: grey,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
 
               const SizedBox(width: 2),
 
@@ -253,7 +275,9 @@ class DashboardPage extends ConsumerWidget {
                 size: 15,
                 color: dark,
               ),
+
               SizedBox(width: 6),
+
               Text(
                 'May 24, 2024',
                 style: TextStyle(
@@ -453,7 +477,7 @@ class DashboardPage extends ConsumerWidget {
         'date': 'May 25, 8:00 AM',
         'items': '22 Items',
         'status': 'Confirmed',
-        'color': Color(0xFF2878E8),
+        'color': const Color(0xFF2878E8),
       },
       {
         'id': 'BK-2024-053',
@@ -461,7 +485,7 @@ class DashboardPage extends ConsumerWidget {
         'date': 'May 25, 12:00 PM',
         'items': '18 Items',
         'status': 'Ready to Load',
-        'color': Color(0xFFF47A24),
+        'color': const Color(0xFFF47A24),
       },
       {
         'id': 'BK-2024-054',
@@ -609,10 +633,6 @@ class DashboardPage extends ConsumerWidget {
         'icon': Icons.search_rounded,
       },
       {
-        'title': 'Equipment',
-        'icon': Icons.inventory_2_outlined,
-      },
-      {
         'title': 'Dispatch Board',
         'icon': Icons.local_shipping_outlined,
       },
@@ -695,20 +715,20 @@ class DashboardPage extends ConsumerWidget {
       {
         'title': '3 equipment items need repair',
         'icon': Icons.warning_amber_rounded,
-        'color': Color(0xFFE53935),
-        'background': Color(0xFFFFE9E9),
+        'color': const Color(0xFFE53935),
+        'background': const Color(0xFFFFE9E9),
       },
       {
         'title': '2 bookings require your approval',
         'icon': Icons.warning_amber_rounded,
-        'color': Color(0xFFF47A24),
-        'background': Color(0xFFFFF0E0),
+        'color': const Color(0xFFF47A24),
+        'background': const Color(0xFFFFF0E0),
       },
       {
         'title': '4 items are due for return tomorrow',
         'icon': Icons.info_outline_rounded,
-        'color': Color(0xFF2878E8),
-        'background': Color(0xFFEAF2FF),
+        'color': const Color(0xFF2878E8),
+        'background': const Color(0xFFEAF2FF),
       },
     ];
 
@@ -770,7 +790,7 @@ class DashboardPage extends ConsumerWidget {
   // BOTTOM NAVIGATION
   // ------------------------------------------------------------
 
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(
         8,
@@ -789,11 +809,19 @@ class DashboardPage extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
+          // ----------------------------------------------------
+          // HOME
+          // ----------------------------------------------------
+
           _buildNavItem(
             Icons.home_rounded,
             'Home',
             true,
           ),
+
+          // ----------------------------------------------------
+          // BOOKINGS
+          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.calendar_month_rounded,
@@ -801,11 +829,32 @@ class DashboardPage extends ConsumerWidget {
             false,
           ),
 
-          _buildNavItem(
-            Icons.inventory_2_outlined,
-            'Equipment',
-            false,
+          // ----------------------------------------------------
+          // EQUIPMENT
+          // ONLY EQUIPMENT BUTTON IN THE ENTIRE DASHBOARD
+          // POSITION: BETWEEN BOOKINGS AND ALERTS
+          // ----------------------------------------------------
+
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EquipmentPage(),
+                ),
+              );
+            },
+            child: _buildNavItem(
+              Icons.inventory_2_outlined,
+              'Equipment',
+              false,
+            ),
           ),
+
+          // ----------------------------------------------------
+          // ALERTS
+          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.notifications_none_rounded,
@@ -813,6 +862,10 @@ class DashboardPage extends ConsumerWidget {
             false,
             badge: '2',
           ),
+
+          // ----------------------------------------------------
+          // MORE
+          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.more_horiz_rounded,
@@ -823,6 +876,10 @@ class DashboardPage extends ConsumerWidget {
       ),
     );
   }
+
+  // ------------------------------------------------------------
+  // NAV ITEM
+  // ------------------------------------------------------------
 
   Widget _buildNavItem(
     IconData icon,

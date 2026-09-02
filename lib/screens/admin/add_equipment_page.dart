@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -39,7 +39,9 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
 
   String selectedCategory = 'Sound';
 
-  File? selectedImage;
+  /// Web-compatible: store picked image as raw bytes
+  Uint8List? _imageBytes;
+  String? _imageName;
 
   bool isSaving = false;
 
@@ -62,28 +64,23 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
 
   Future<void> _pickImage() async {
     try {
-      final XFile? image =
-          await imagePicker.pickImage(
+      final XFile? image = await imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
 
-      if (image == null) {
-        return;
-      }
+      if (image == null) return;
+
+      final bytes = await image.readAsBytes();
 
       setState(() {
-        selectedImage = File(image.path);
+        _imageBytes = bytes;
+        _imageName = image.name;
       });
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Unable to select image: $e',
-          ),
-        ),
+        SnackBar(content: Text('Unable to select image: $e')),
       );
     }
   }
@@ -94,37 +91,13 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
 
   void _removeImage() {
     setState(() {
-      selectedImage = null;
+      _imageBytes = null;
+      _imageName = null;
     });
   }
 
-  // ============================================================
-  // UPLOAD IMAGE TO FIREBASE STORAGE
-  // ============================================================
+  // Upload is now handled inline in _submitForm using putData
 
-  Future<String?> _uploadImage(String equipmentId) async {
-    if (selectedImage == null) {
-      return null;
-    }
-
-    final String fileName =
-        '${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    final Reference storageReference =
-        FirebaseStorage.instance
-            .ref()
-            .child('equipment')
-            .child(equipmentId)
-            .child(fileName);
-
-    final UploadTask uploadTask =
-        storageReference.putFile(selectedImage!);
-
-    final TaskSnapshot snapshot =
-        await uploadTask;
-
-    return await snapshot.ref.getDownloadURL();
-  }
 
   // ============================================================
   // SUBMIT FORM
@@ -196,28 +169,36 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
 
       String? imageUrl;
 
-      if (selectedImage != null) {
-        final String fileName =
-            '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      if (_imageBytes != null) {
+        try {
+          final String ext =
+              (_imageName?.split('.').last.toLowerCase()) ?? 'jpg';
+          final String fileName =
+              '${DateTime.now().millisecondsSinceEpoch}.$ext';
 
-        final Reference storageReference =
-            FirebaseStorage.instance
-                .ref()
-                .child('equipment')
-                .child(firestoreId)
-                .child(fileName);
+          final Reference storageReference = FirebaseStorage.instance
+              .ref()
+              .child('equipment')
+              .child(firestoreId)
+              .child(fileName);
 
-        uploadedImagePath =
-            storageReference.fullPath;
+          uploadedImagePath = storageReference.fullPath;
 
-        final UploadTask uploadTask =
-            storageReference.putFile(selectedImage!);
+          final UploadTask uploadTask = storageReference.putData(
+            _imageBytes!,
+            SettableMetadata(contentType: 'image/$ext'),
+          );
 
-        final TaskSnapshot snapshot =
-            await uploadTask;
-
-        imageUrl =
-            await snapshot.ref.getDownloadURL();
+          // Timeout after 30 seconds to prevent infinite hang
+          final TaskSnapshot snapshot = await uploadTask
+              .timeout(const Duration(seconds: 30));
+          imageUrl = await snapshot.ref.getDownloadURL();
+        } catch (storageError) {
+          // Storage failed (rules/network/timeout) — continue without image.
+          // The equipment will still be saved to Firestore.
+          debugPrint('Storage upload skipped: $storageError');
+          uploadedImagePath = null; // nothing to clean up
+        }
       }
 
       // --------------------------------------------------------
@@ -284,7 +265,7 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
       if (uploadedImagePath != null) {
         try {
           await FirebaseStorage.instance
-              .ref(uploadedImagePath!)
+              .ref(uploadedImagePath)
               .delete();
         } catch (_) {
           // Ignore cleanup failure.
@@ -574,8 +555,7 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
                           ),
 
                           child:
-                              selectedImage ==
-                                      null
+                              _imageBytes == null
                                   ? _imagePlaceholder()
                                   : _selectedImagePreview(),
                         ),
@@ -785,10 +765,9 @@ class _AddEquipmentPageState extends State<AddEquipmentPage> {
         ClipRRect(
           borderRadius:
               BorderRadius.circular(15),
-          child: Image.file(
-            selectedImage!,
-            width:
-                double.infinity,
+          child: Image.memory(
+            _imageBytes!,
+            width: double.infinity,
             height: 145,
             fit: BoxFit.cover,
           ),

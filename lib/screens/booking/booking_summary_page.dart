@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../state/booking_draft_provider.dart';
+import '../../state/auth_provider.dart';
+import '../../services/functions_service.dart';
 
 // Copying mock data for display purposes
 class CatalogItem {
@@ -78,82 +80,132 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
     ),
   ];
 
-  void _submitBooking() {
-    // Show success dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEAF7F1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_circle_rounded, color: green, size: 32),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Booking Requested',
-                  style: TextStyle(
-                    color: dark,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Your booking request has been submitted for approval. You can track its status in the Bookings tab.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: grey,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Clear draft and pop to dashboard
-                      ref.read(bookingDraftProvider.notifier).clearDraft();
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Back to Dashboard',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+  bool _isSubmitting = false;
+
+  void _submitBooking() async {
+    final draft = ref.read(bookingDraftProvider);
+    final userProfile = ref.read(userProfileProvider).value;
+    
+    if (draft.startDate == null || draft.endDate == null || userProfile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Missing booking details or user profile')));
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final List<Map<String, dynamic>> equipmentList = [];
+      draft.selectedItems.forEach((id, quantity) {
+        if (quantity > 0) {
+          final item = allEquipment.firstWhere((e) => e.id == id, orElse: () => allEquipment[0]);
+          equipmentList.add({
+            'equipmentId': item.id,
+            'equipmentName': item.name,
+            'category': item.category,
+            'quantity': quantity,
+          });
+        }
+      });
+
+      final functions = FunctionsService();
+      await functions.createBookingRequest(
+        clientName: userProfile.name,
+        contactPhone: userProfile.phone ?? 'Unknown',
+        startDateTime: draft.startDate!,
+        endDateTime: draft.endDate!,
+        equipmentRequested: equipmentList,
+      );
+
+      if (!mounted) return;
+      
+      // Show success dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-          ),
-        );
-      },
-    );
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEAF7F1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle_rounded, color: green, size: 32),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Booking Requested',
+                    style: TextStyle(
+                      color: dark,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Your booking request has been submitted for approval. You can track its status in the Bookings tab.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: grey,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Clear draft and pop to dashboard
+                        ref.read(bookingDraftProvider.notifier).clearDraft();
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Back to Dashboard',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -366,7 +418,7 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _submitBooking,
+                  onPressed: _isSubmitting ? null : _submitBooking,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: green,
                     shape: RoundedRectangleBorder(
@@ -374,14 +426,16 @@ class _BookingSummaryPageState extends ConsumerState<BookingSummaryPage> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Submit Request',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: _isSubmitting 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Submit Request',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                 ),
               ),
             ),

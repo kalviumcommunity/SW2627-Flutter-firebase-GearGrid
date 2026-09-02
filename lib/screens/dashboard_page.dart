@@ -582,7 +582,6 @@ class DashboardPage extends StatelessWidget {
       {
         'title': 'New Booking',
         'icon': Icons.edit_calendar_outlined,
-        'icon': Icons.calendar_today_outlined,
       },
       {
         'title': 'Check Availability',
@@ -659,8 +658,9 @@ class DashboardPage extends StatelessWidget {
                 ],
               ),
             ),
-          );
-        },
+          ),
+        );
+      },
       ),
     );
   }

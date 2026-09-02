@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'screens/landing_page.dart';
-import 'screens/dashboard_page.dart';
+import 'screens/home_router.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 
@@ -52,7 +52,7 @@ class GearGridApp extends ConsumerWidget {
         data: (user) {
           // User is logged in
           if (user != null) {
-            return const DashboardPage();
+            return const HomeRouter();
           }
 
           // User is not logged in

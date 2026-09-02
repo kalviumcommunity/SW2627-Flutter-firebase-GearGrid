@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'equipment_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/auth_service.dart';
+import '../shared/equipment_page.dart';
 import 'booking/date_selection_page.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   static const Color green = Color(0xFF16845F);
@@ -11,7 +13,7 @@ class DashboardPage extends StatelessWidget {
   static const Color border = Color(0xFFE6E9ED);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -20,17 +22,27 @@ class DashboardPage extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  16,
+                  20,
+                  24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(),
+
                     const SizedBox(height: 24),
+
                     _buildGreeting(),
+
                     const SizedBox(height: 24),
 
                     _buildSectionTitle('Overview'),
+
                     const SizedBox(height: 12),
+
                     _buildOverview(),
 
                     const SizedBox(height: 28),
@@ -39,12 +51,15 @@ class DashboardPage extends StatelessWidget {
                       'Upcoming Dispatches',
                       action: 'View all',
                     ),
+
                     const SizedBox(height: 12),
+
                     _buildDispatches(),
 
                     const SizedBox(height: 28),
 
                     _buildSectionTitle('Quick Actions'),
+
                     const SizedBox(height: 12),
                     _buildQuickActions(context),
 
@@ -54,14 +69,20 @@ class DashboardPage extends StatelessWidget {
                       'Alerts & Notifications',
                       action: 'View all',
                     ),
+
                     const SizedBox(height: 12),
+
                     _buildAlerts(),
                   ],
                 ),
               ),
             ),
 
-            _buildBottomNavigation(),
+            // ------------------------------------------------
+            // BOTTOM NAVIGATION
+            // ------------------------------------------------
+
+            _buildBottomNavigation(context),
           ],
         ),
       ),
@@ -72,7 +93,7 @@ class DashboardPage extends StatelessWidget {
   // HEADER
   // ------------------------------------------------------------
 
-  Widget _buildHeader() {
+  Widget _buildHeader(WidgetRef ref) {
     return Row(
       children: [
         const Icon(
@@ -124,6 +145,7 @@ class DashboardPage extends StatelessWidget {
               color: dark,
               size: 28,
             ),
+
             Positioned(
               right: -2,
               top: -4,
@@ -134,20 +156,35 @@ class DashboardPage extends StatelessWidget {
 
         const SizedBox(width: 14),
 
-        const CircleAvatar(
-          radius: 21,
-          backgroundColor: green,
-          child: Text(
-            'A',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 17,
+        PopupMenuButton<String>(
+          onSelected: (value) async {
+            if (value == 'logout') {
+              await ref.read(authServiceProvider).signOut();
+            }
+          },
+          offset: const Offset(0, 45),
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'logout',
+              child: Text('Sign Out'),
             ),
-          ),
-        ),
+          ],
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 21,
+                backgroundColor: green,
+                child: Text(
+                  'A',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                  ),
+                ),
+              ),
 
-        const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +197,9 @@ class DashboardPage extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
+
             SizedBox(height: 2),
+
             Text(
               'Admin',
               style: TextStyle(
@@ -171,12 +210,15 @@ class DashboardPage extends StatelessWidget {
           ],
         ),
 
-        const SizedBox(width: 2),
+              const SizedBox(width: 2),
 
-        const Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: grey,
-          size: 20,
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: grey,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -233,7 +275,9 @@ class DashboardPage extends StatelessWidget {
                 size: 15,
                 color: dark,
               ),
+
               SizedBox(width: 6),
+
               Text(
                 'May 24, 2024',
                 style: TextStyle(
@@ -294,7 +338,7 @@ class DashboardPage extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio: 1.42,
+      childAspectRatio: 1.20, // Reduced ratio to give cards more vertical space
       children: [
         _buildMetricCard(
           icon: Icons.calendar_month_rounded,
@@ -433,7 +477,7 @@ class DashboardPage extends StatelessWidget {
         'date': 'May 25, 8:00 AM',
         'items': '22 Items',
         'status': 'Confirmed',
-        'color': Color(0xFF2878E8),
+        'color': const Color(0xFF2878E8),
       },
       {
         'id': 'BK-2024-053',
@@ -441,7 +485,7 @@ class DashboardPage extends StatelessWidget {
         'date': 'May 25, 12:00 PM',
         'items': '18 Items',
         'status': 'Ready to Load',
-        'color': Color(0xFFF47A24),
+        'color': const Color(0xFFF47A24),
       },
       {
         'id': 'BK-2024-054',
@@ -588,10 +632,6 @@ class DashboardPage extends StatelessWidget {
         'icon': Icons.search_rounded,
       },
       {
-        'title': 'Equipment',
-        'icon': Icons.inventory_2_outlined,
-      },
-      {
         'title': 'Dispatch Board',
         'icon': Icons.local_shipping_outlined,
       },
@@ -624,38 +664,39 @@ class DashboardPage extends StatelessWidget {
                 margin: EdgeInsets.only(
                   right: index == actions.length - 1 ? 0 : 7,
                 ),
-              padding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(17),
-                border: Border.all(
-                  color: border,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 4,
                 ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    actions[index]['icon'] as IconData,
-                    color: green,
-                    size: 25,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(
+                    color: border,
                   ),
-
-                  const SizedBox(height: 7),
-
-                  Text(
-                    actions[index]['title'] as String,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: const TextStyle(
-                      color: dark,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      actions[index]['icon'] as IconData,
+                      color: green,
+                      size: 25,
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 7),
+
+                    Text(
+                      actions[index]['title'] as String,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      style: const TextStyle(
+                        color: dark,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -674,20 +715,20 @@ class DashboardPage extends StatelessWidget {
       {
         'title': '3 equipment items need repair',
         'icon': Icons.warning_amber_rounded,
-        'color': Color(0xFFE53935),
-        'background': Color(0xFFFFE9E9),
+        'color': const Color(0xFFE53935),
+        'background': const Color(0xFFFFE9E9),
       },
       {
         'title': '2 bookings require your approval',
         'icon': Icons.warning_amber_rounded,
-        'color': Color(0xFFF47A24),
-        'background': Color(0xFFFFF0E0),
+        'color': const Color(0xFFF47A24),
+        'background': const Color(0xFFFFF0E0),
       },
       {
         'title': '4 items are due for return tomorrow',
         'icon': Icons.info_outline_rounded,
-        'color': Color(0xFF2878E8),
-        'background': Color(0xFFEAF2FF),
+        'color': const Color(0xFF2878E8),
+        'background': const Color(0xFFEAF2FF),
       },
     ];
 
@@ -749,7 +790,7 @@ class DashboardPage extends StatelessWidget {
   // BOTTOM NAVIGATION
   // ------------------------------------------------------------
 
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(
         8,
@@ -768,11 +809,19 @@ class DashboardPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
+          // ----------------------------------------------------
+          // HOME
+          // ----------------------------------------------------
+
           _buildNavItem(
             Icons.home_rounded,
             'Home',
             true,
           ),
+
+          // ----------------------------------------------------
+          // BOOKINGS
+          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.calendar_month_rounded,
@@ -780,11 +829,32 @@ class DashboardPage extends StatelessWidget {
             false,
           ),
 
-          _buildNavItem(
-            Icons.inventory_2_outlined,
-            'Equipment',
-            false,
+          // ----------------------------------------------------
+          // EQUIPMENT
+          // ONLY EQUIPMENT BUTTON IN THE ENTIRE DASHBOARD
+          // POSITION: BETWEEN BOOKINGS AND ALERTS
+          // ----------------------------------------------------
+
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EquipmentPage(),
+                ),
+              );
+            },
+            child: _buildNavItem(
+              Icons.inventory_2_outlined,
+              'Equipment',
+              false,
+            ),
           ),
+
+          // ----------------------------------------------------
+          // ALERTS
+          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.notifications_none_rounded,
@@ -792,6 +862,10 @@ class DashboardPage extends StatelessWidget {
             false,
             badge: '2',
           ),
+
+          // ----------------------------------------------------
+          // MORE
+          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.more_horiz_rounded,
@@ -802,6 +876,10 @@ class DashboardPage extends StatelessWidget {
       ),
     );
   }
+
+  // ------------------------------------------------------------
+  // NAV ITEM
+  // ------------------------------------------------------------
 
   Widget _buildNavItem(
     IconData icon,

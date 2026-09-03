@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../services/auth_service.dart';
+import '../auth/login_page.dart';
 import '../shared/equipment_page.dart';
 import 'booking/date_selection_page.dart';
 
@@ -16,6 +18,13 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+      // ------------------------------------------------
+      // SIDE DRAWER
+      // ------------------------------------------------
+
+      drawer: _buildDrawer(context, ref),
+
       body: SafeArea(
         child: Column(
           children: [
@@ -31,7 +40,7 @@ class DashboardPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(),
+                    _buildHeader(context, ref),
 
                     const SizedBox(height: 24),
 
@@ -61,6 +70,7 @@ class DashboardPage extends ConsumerWidget {
                     _buildSectionTitle('Quick Actions'),
 
                     const SizedBox(height: 12),
+
                     _buildQuickActions(context),
 
                     const SizedBox(height: 28),
@@ -78,10 +88,6 @@ class DashboardPage extends ConsumerWidget {
               ),
             ),
 
-            // ------------------------------------------------
-            // BOTTOM NAVIGATION
-            // ------------------------------------------------
-
             _buildBottomNavigation(context),
           ],
         ),
@@ -89,17 +95,303 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
-  // HEADER
-  // ------------------------------------------------------------
+  // ============================================================
+  // SIDE DRAWER
+  // ============================================================
 
-  Widget _buildHeader(WidgetRef ref) {
+  Widget _buildDrawer(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // ------------------------------------------------
+            // DRAWER HEADER
+            // ------------------------------------------------
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                24,
+                20,
+                24,
+              ),
+              decoration: const BoxDecoration(
+                color: green,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'G',
+                        style: TextStyle(
+                          color: green,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GEARGRID',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        'Equipment Rental Management',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ------------------------------------------------
+            // HOME
+            // ------------------------------------------------
+
+            ListTile(
+              leading: const Icon(
+                Icons.home_rounded,
+                color: green,
+              ),
+              title: const Text(
+                'Dashboard',
+                style: TextStyle(
+                  color: dark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+
+            // ------------------------------------------------
+            // BOOKINGS
+            // ------------------------------------------------
+
+            ListTile(
+              leading: const Icon(
+                Icons.calendar_month_rounded,
+                color: grey,
+              ),
+              title: const Text(
+                'Bookings',
+                style: TextStyle(
+                  color: dark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+
+            // ------------------------------------------------
+            // EQUIPMENT
+            // ------------------------------------------------
+
+            ListTile(
+              leading: const Icon(
+                Icons.inventory_2_outlined,
+                color: grey,
+              ),
+              title: const Text(
+                'Equipment',
+                style: TextStyle(
+                  color: dark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EquipmentPage(),
+                  ),
+                );
+              },
+            ),
+
+            // ------------------------------------------------
+            // ALERTS
+            // ------------------------------------------------
+
+            ListTile(
+              leading: const Icon(
+                Icons.notifications_none_rounded,
+                color: grey,
+              ),
+              title: const Text(
+                'Alerts',
+                style: TextStyle(
+                  color: dark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+
+            const Divider(
+              height: 32,
+              indent: 20,
+              endIndent: 20,
+              color: border,
+            ),
+
+            // ------------------------------------------------
+            // ACCOUNT
+            // ------------------------------------------------
+
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'ACCOUNT',
+                  style: TextStyle(
+                    color: grey,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            ListTile(
+              leading: const Icon(
+                Icons.person_outline_rounded,
+                color: grey,
+              ),
+              title: const Text(
+                'Profile',
+                style: TextStyle(
+                  color: dark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+
+            const Spacer(),
+
+            const Divider(
+              height: 1,
+              color: border,
+            ),
+
+            // ------------------------------------------------
+            // LOGOUT
+            // ------------------------------------------------
+
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              leading: const Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFE53935),
+              ),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color(0xFFE53935),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+
+                await ref
+                    .read(authServiceProvider)
+                    .signOut();
+
+                if (!context.mounted) return;
+
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LoginPage(),
+                  ),
+                  (route) => false,
+                );
+              },
+            ),
+
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // HEADER
+  // ============================================================
+
+  Widget _buildHeader(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     return Row(
       children: [
-        const Icon(
-          Icons.menu_rounded,
-          size: 30,
-          color: dark,
+        // ------------------------------------------------
+        // THREE-LINE MENU
+        // ------------------------------------------------
+
+        IconButton(
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(
+            minWidth: 30,
+            minHeight: 30,
+          ),
+          icon: const Icon(
+            Icons.menu_rounded,
+            size: 30,
+            color: dark,
+          ),
         ),
 
         const SizedBox(width: 12),
@@ -145,7 +437,6 @@ class DashboardPage extends ConsumerWidget {
               color: dark,
               size: 28,
             ),
-
             Positioned(
               right: -2,
               top: -4,
@@ -159,7 +450,19 @@ class DashboardPage extends ConsumerWidget {
         PopupMenuButton<String>(
           onSelected: (value) async {
             if (value == 'logout') {
-              await ref.read(authServiceProvider).signOut();
+              await ref
+                  .read(authServiceProvider)
+                  .signOut();
+
+              if (!context.mounted) return;
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LoginPage(),
+                ),
+                (route) => false,
+              );
             }
           },
           offset: const Offset(0, 45),
@@ -186,29 +489,27 @@ class DashboardPage extends ConsumerWidget {
 
               const SizedBox(width: 8),
 
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Arjun',
-              style: TextStyle(
-                color: dark,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Arjun',
+                    style: TextStyle(
+                      color: dark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Admin',
+                    style: TextStyle(
+                      color: grey,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
-            ),
-
-            SizedBox(height: 2),
-
-            Text(
-              'Admin',
-              style: TextStyle(
-                color: grey,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
 
               const SizedBox(width: 2),
 
@@ -224,9 +525,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // GREETING
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildGreeting() {
     return Row(
@@ -244,9 +545,7 @@ class DashboardPage extends ConsumerWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               SizedBox(height: 6),
-
               Text(
                 "Here's what's happening with your business today.",
                 style: TextStyle(
@@ -275,9 +574,7 @@ class DashboardPage extends ConsumerWidget {
                 size: 15,
                 color: dark,
               ),
-
               SizedBox(width: 6),
-
               Text(
                 'May 24, 2024',
                 style: TextStyle(
@@ -293,9 +590,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // SECTION TITLE
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildSectionTitle(
     String title, {
@@ -311,9 +608,7 @@ class DashboardPage extends ConsumerWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
-
         const Spacer(),
-
         if (action != null)
           Text(
             action,
@@ -327,9 +622,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // OVERVIEW
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildOverview() {
     return GridView.count(
@@ -338,7 +633,7 @@ class DashboardPage extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio: 1.20, // Reduced ratio to give cards more vertical space
+      childAspectRatio: 1.20,
       children: [
         _buildMetricCard(
           icon: Icons.calendar_month_rounded,
@@ -348,7 +643,6 @@ class DashboardPage extends ConsumerWidget {
           iconColor: green,
           iconBackground: const Color(0xFFEAF7F1),
         ),
-
         _buildMetricCard(
           icon: Icons.assignment_rounded,
           value: '18',
@@ -357,7 +651,6 @@ class DashboardPage extends ConsumerWidget {
           iconColor: const Color(0xFFF47A24),
           iconBackground: const Color(0xFFFFF0E6),
         ),
-
         _buildMetricCard(
           icon: Icons.pie_chart_rounded,
           value: '76%',
@@ -366,7 +659,6 @@ class DashboardPage extends ConsumerWidget {
           iconColor: const Color(0xFF6D45D8),
           iconBackground: const Color(0xFFF0EBFF),
         ),
-
         _buildMetricCard(
           icon: Icons.currency_rupee_rounded,
           value: '₹ 12.45 L',
@@ -419,9 +711,7 @@ class DashboardPage extends ConsumerWidget {
               size: 22,
             ),
           ),
-
           const Spacer(),
-
           Text(
             value,
             style: const TextStyle(
@@ -430,9 +720,7 @@ class DashboardPage extends ConsumerWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-
           const SizedBox(height: 2),
-
           Text(
             title,
             style: const TextStyle(
@@ -441,9 +729,7 @@ class DashboardPage extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             '$change vs last month',
             style: TextStyle(
@@ -457,9 +743,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // UPCOMING DISPATCHES
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildDispatches() {
     final dispatches = [
@@ -538,9 +824,7 @@ class DashboardPage extends ConsumerWidget {
                       size: 21,
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,9 +837,7 @@ class DashboardPage extends ConsumerWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-
                         const SizedBox(height: 3),
-
                         Text(
                           item['event'] as String,
                           style: const TextStyle(
@@ -564,9 +846,7 @@ class DashboardPage extends ConsumerWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-
                         const SizedBox(height: 4),
-
                         Text(
                           '▣ ${item['date']}   ▫ ${item['items']}',
                           style: const TextStyle(
@@ -577,9 +857,7 @@ class DashboardPage extends ConsumerWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(width: 6),
-
                   _buildStatusChip(
                     item['status'] as String,
                     color,
@@ -617,9 +895,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // QUICK ACTIONS
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
@@ -648,14 +926,8 @@ class DashboardPage extends ConsumerWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const DateSelectionPage(),
-                    ),
-                  );
-                } else if (actions[index]['title'] == 'Equipment') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EquipmentPage(),
+                      builder: (context) =>
+                          const DateSelectionPage(),
                     ),
                   );
                 }
@@ -682,9 +954,7 @@ class DashboardPage extends ConsumerWidget {
                       color: green,
                       size: 25,
                     ),
-
                     const SizedBox(height: 7),
-
                     Text(
                       actions[index]['title'] as String,
                       textAlign: TextAlign.center,
@@ -699,16 +969,15 @@ class DashboardPage extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
       ),
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ALERTS
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildAlerts() {
     final alerts = [
@@ -751,7 +1020,6 @@ class DashboardPage extends ConsumerWidget {
                 horizontal: 12,
                 vertical: 1,
               ),
-
               leading: Container(
                 width: 40,
                 height: 40,
@@ -765,7 +1033,6 @@ class DashboardPage extends ConsumerWidget {
                   size: 21,
                 ),
               ),
-
               title: Text(
                 item['title'] as String,
                 style: const TextStyle(
@@ -774,7 +1041,6 @@ class DashboardPage extends ConsumerWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-
               trailing: const Icon(
                 Icons.chevron_right_rounded,
                 color: grey,
@@ -786,9 +1052,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // BOTTOM NAVIGATION
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildBottomNavigation(BuildContext context) {
     return Container(
@@ -809,19 +1075,11 @@ class DashboardPage extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // ----------------------------------------------------
-          // HOME
-          // ----------------------------------------------------
-
           _buildNavItem(
             Icons.home_rounded,
             'Home',
             true,
           ),
-
-          // ----------------------------------------------------
-          // BOOKINGS
-          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.calendar_month_rounded,
@@ -829,12 +1087,7 @@ class DashboardPage extends ConsumerWidget {
             false,
           ),
 
-          // ----------------------------------------------------
-          // EQUIPMENT
-          // ONLY EQUIPMENT BUTTON IN THE ENTIRE DASHBOARD
-          // POSITION: BETWEEN BOOKINGS AND ALERTS
-          // ----------------------------------------------------
-
+          // ONLY EQUIPMENT BUTTON
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
@@ -852,20 +1105,12 @@ class DashboardPage extends ConsumerWidget {
             ),
           ),
 
-          // ----------------------------------------------------
-          // ALERTS
-          // ----------------------------------------------------
-
           _buildNavItem(
             Icons.notifications_none_rounded,
             'Alerts',
             false,
             badge: '2',
           ),
-
-          // ----------------------------------------------------
-          // MORE
-          // ----------------------------------------------------
 
           _buildNavItem(
             Icons.more_horiz_rounded,
@@ -877,9 +1122,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // NAV ITEM
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildNavItem(
     IconData icon,
@@ -900,7 +1145,6 @@ class DashboardPage extends ConsumerWidget {
                 color: selected ? green : grey,
                 size: 24,
               ),
-
               if (badge != null)
                 Positioned(
                   right: -8,
@@ -909,9 +1153,7 @@ class DashboardPage extends ConsumerWidget {
                 ),
             ],
           ),
-
           const SizedBox(height: 4),
-
           Text(
             title,
             style: TextStyle(
@@ -927,9 +1169,9 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // NOTIFICATION BADGE
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildBadge(String text) {
     return Container(

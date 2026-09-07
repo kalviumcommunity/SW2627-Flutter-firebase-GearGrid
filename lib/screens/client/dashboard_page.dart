@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
 import '../shared/equipment_page.dart';
+import 'booking/booking_list_page.dart';
 import 'booking/date_selection_page.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -19,10 +20,7 @@ class DashboardPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // ------------------------------------------------
-      // SIDE DRAWER
-      // ------------------------------------------------
-
+      // LEFT SIDE DRAWER
       drawer: _buildDrawer(context, ref),
 
       body: SafeArea(
@@ -31,16 +29,14 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  16,
-                  20,
-                  24,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(context, ref),
+                    // Header needs a Scaffold descendant context
+                    Builder(
+                      builder: (context) => _buildHeader(context, ref),
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -88,7 +84,13 @@ class DashboardPage extends ConsumerWidget {
               ),
             ),
 
-            _buildBottomNavigation(context),
+            // BOTTOM NAVIGATION
+            //
+            // Builder is important because the More button
+            // uses Scaffold.of(context).openDrawer().
+            Builder(
+              builder: (context) => _buildBottomNavigation(context),
+            ),
           ],
         ),
       ),
@@ -96,56 +98,37 @@ class DashboardPage extends ConsumerWidget {
   }
 
   // ============================================================
-  // SIDE DRAWER
+  // DRAWER
   // ============================================================
 
-  Widget _buildDrawer(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget _buildDrawer(BuildContext context, WidgetRef ref) {
     return Drawer(
       backgroundColor: Colors.white,
       child: SafeArea(
         child: Column(
           children: [
-            // ------------------------------------------------
-            // DRAWER HEADER
-            // ------------------------------------------------
-
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                24,
-                20,
-                24,
-              ),
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               decoration: const BoxDecoration(
                 color: green,
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Center(
-                      child: Text(
-                        'G',
-                        style: TextStyle(
-                          color: green,
-                          fontSize: 30,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+                    child: const Icon(
+                      Icons.grid_view_rounded,
+                      color: green,
+                      size: 28,
                     ),
                   ),
-
                   const SizedBox(width: 14),
-
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -153,16 +136,17 @@ class DashboardPage extends ConsumerWidget {
                         'GEARGRID',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 21,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
                         ),
                       ),
                       SizedBox(height: 3),
                       Text(
-                        'Equipment Rental Management',
+                        'Equipment Management',
                         style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -171,12 +155,9 @@ class DashboardPage extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // ------------------------------------------------
-            // HOME
-            // ------------------------------------------------
-
+            // DASHBOARD
             ListTile(
               leading: const Icon(
                 Icons.home_rounded,
@@ -185,7 +166,6 @@ class DashboardPage extends ConsumerWidget {
               title: const Text(
                 'Dashboard',
                 style: TextStyle(
-                  color: dark,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -194,43 +174,32 @@ class DashboardPage extends ConsumerWidget {
               },
             ),
 
-            // ------------------------------------------------
             // BOOKINGS
-            // ------------------------------------------------
-
             ListTile(
               leading: const Icon(
-                Icons.calendar_month_rounded,
-                color: grey,
+                Icons.calendar_month_outlined,
+                color: dark,
               ),
-              title: const Text(
-                'Bookings',
-                style: TextStyle(
-                  color: dark,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              title: const Text('Bookings'),
               onTap: () {
                 Navigator.pop(context);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BookingListPage(),
+                  ),
+                );
               },
             ),
 
-            // ------------------------------------------------
             // EQUIPMENT
-            // ------------------------------------------------
-
             ListTile(
               leading: const Icon(
                 Icons.inventory_2_outlined,
-                color: grey,
+                color: dark,
               ),
-              title: const Text(
-                'Equipment',
-                style: TextStyle(
-                  color: dark,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              title: const Text('Equipment'),
               onTap: () {
                 Navigator.pop(context);
 
@@ -243,68 +212,32 @@ class DashboardPage extends ConsumerWidget {
               },
             ),
 
-            // ------------------------------------------------
             // ALERTS
-            // ------------------------------------------------
-
             ListTile(
               leading: const Icon(
                 Icons.notifications_none_rounded,
-                color: grey,
+                color: dark,
               ),
-              title: const Text(
-                'Alerts',
-                style: TextStyle(
-                  color: dark,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              title: const Text('Alerts'),
               onTap: () {
                 Navigator.pop(context);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AlertsPage(),
+                  ),
+                );
               },
             ),
 
-            const Divider(
-              height: 32,
-              indent: 20,
-              endIndent: 20,
-              color: border,
-            ),
-
-            // ------------------------------------------------
-            // ACCOUNT
-            // ------------------------------------------------
-
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'ACCOUNT',
-                  style: TextStyle(
-                    color: grey,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
+            // PROFILE
             ListTile(
               leading: const Icon(
                 Icons.person_outline_rounded,
-                color: grey,
+                color: dark,
               ),
-              title: const Text(
-                'Profile',
-                style: TextStyle(
-                  color: dark,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              title: const Text('Profile'),
               onTap: () {
                 Navigator.pop(context);
               },
@@ -317,33 +250,21 @@ class DashboardPage extends ConsumerWidget {
               color: border,
             ),
 
-            // ------------------------------------------------
             // LOGOUT
-            // ------------------------------------------------
-
             ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
               leading: const Icon(
                 Icons.logout_rounded,
-                color: Color(0xFFE53935),
+                color: Colors.red,
               ),
               title: const Text(
-                'Logout',
+                'Sign Out',
                 style: TextStyle(
-                  color: Color(0xFFE53935),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               onTap: () async {
-                Navigator.pop(context);
-
-                await ref
-                    .read(authServiceProvider)
-                    .signOut();
+                await ref.read(authServiceProvider).signOut();
 
                 if (!context.mounted) return;
 
@@ -368,91 +289,124 @@ class DashboardPage extends ConsumerWidget {
   // HEADER
   // ============================================================
 
-  Widget _buildHeader(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget _buildHeader(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
-        // ------------------------------------------------
-        // THREE-LINE MENU
-        // ------------------------------------------------
-
-        IconButton(
-          onPressed: () {
+        // HAMBURGER
+        InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
             Scaffold.of(context).openDrawer();
           },
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: 30,
-            minHeight: 30,
-          ),
-          icon: const Icon(
-            Icons.menu_rounded,
-            size: 30,
-            color: dark,
-          ),
-        ),
-
-        const SizedBox(width: 12),
-
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: green,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: const Center(
-            child: Text(
-              'G',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 23,
-                fontWeight: FontWeight.w900,
-              ),
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F7F9),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        const Text(
-          'GEARGRID',
-          style: TextStyle(
-            color: dark,
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.3,
-          ),
-        ),
-
-        const Spacer(),
-
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            const Icon(
-              Icons.notifications_none_rounded,
+            child: const Icon(
+              Icons.menu_rounded,
               color: dark,
-              size: 28,
+              size: 24,
             ),
-            Positioned(
-              right: -2,
-              top: -4,
-              child: _buildBadge('3'),
-            ),
-          ],
+          ),
         ),
 
         const SizedBox(width: 14),
 
+        // LOGO
+        const Expanded(
+          child: Row(
+            children: [
+              Icon(
+                Icons.grid_view_rounded,
+                color: green,
+                size: 28,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'GEARGRID',
+                style: TextStyle(
+                  color: dark,
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // NOTIFICATIONS
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AlertsPage(),
+                  ),
+                );
+              },
+              icon: const Icon(
+                Icons.notifications_none_rounded,
+                color: dark,
+                size: 27,
+              ),
+            ),
+            Positioned(
+              right: 6,
+              top: 6,
+              child: Container(
+                width: 17,
+                height: 17,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 1.5,
+                  ),
+                ),
+                child: const Text(
+                  '3',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // PROFILE MENU
         PopupMenuButton<String>(
+          icon: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: green.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              'A',
+              style: TextStyle(
+                color: green,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
           onSelected: (value) async {
             if (value == 'logout') {
-              await ref
-                  .read(authServiceProvider)
-                  .signOut();
+              await ref.read(authServiceProvider).signOut();
 
               if (!context.mounted) return;
 
@@ -465,61 +419,51 @@ class DashboardPage extends ConsumerWidget {
               );
             }
           },
-          offset: const Offset(0, 45),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'logout',
-              child: Text('Sign Out'),
-            ),
-          ],
-          child: Row(
-            children: [
-              const CircleAvatar(
-                radius: 21,
-                backgroundColor: green,
-                child: Text(
-                  'A',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 17,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              const Column(
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              enabled: false,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Arjun',
                     style: TextStyle(
+                      fontWeight: FontWeight.bold,
                       color: dark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   SizedBox(height: 2),
                   Text(
                     'Admin',
                     style: TextStyle(
+                      fontSize: 12,
                       color: grey,
-                      fontSize: 11,
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(width: 2),
-
-              const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: grey,
-                size: 20,
+            ),
+            PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -530,61 +474,42 @@ class DashboardPage extends ConsumerWidget {
   // ============================================================
 
   Widget _buildGreeting() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hi, Arjun 👋',
-                style: TextStyle(
-                  color: dark,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              SizedBox(height: 6),
-              Text(
-                "Here's what's happening with your business today.",
-                style: TextStyle(
-                  color: grey,
-                  fontSize: 12.5,
-                  height: 1.4,
-                ),
-              ),
-            ],
+        const Text(
+          'Hi, Arjun 👋',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: dark,
           ),
         ),
-
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 9,
+        const SizedBox(height: 6),
+        const Text(
+          "Here's what's happening with your business today.",
+          style: TextStyle(
+            fontSize: 14,
+            color: grey,
           ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F7F8),
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: const Row(
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 15,
-                color: dark,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 14,
+              color: grey,
+            ),
+            const SizedBox(width: 6),
+            const Text(
+              'May 24, 2024',
+              style: TextStyle(
+                fontSize: 13,
+                color: grey,
               ),
-              SizedBox(width: 6),
-              Text(
-                'May 24, 2024',
-                style: TextStyle(
-                  color: dark,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -600,22 +525,31 @@ class DashboardPage extends ConsumerWidget {
   }) {
     return Row(
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: dark,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: dark,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        const Spacer(),
         if (action != null)
-          Text(
-            action,
-            style: const TextStyle(
-              color: green,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              action,
+              style: const TextStyle(
+                color: green,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
       ],
@@ -631,85 +565,88 @@ class DashboardPage extends ConsumerWidget {
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 1.20,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.55,
       children: [
-        _buildMetricCard(
-          icon: Icons.calendar_month_rounded,
-          value: '128',
+        _buildOverviewCard(
           title: 'Total Bookings',
+          value: '128',
           change: '↑ 12%',
-          iconColor: green,
-          iconBackground: const Color(0xFFEAF7F1),
+          icon: Icons.calendar_month_outlined,
         ),
-        _buildMetricCard(
-          icon: Icons.assignment_rounded,
-          value: '18',
+        _buildOverviewCard(
           title: 'Pending Approvals',
+          value: '18',
           change: '↑ 8%',
-          iconColor: const Color(0xFFF47A24),
-          iconBackground: const Color(0xFFFFF0E6),
+          icon: Icons.pending_actions_outlined,
         ),
-        _buildMetricCard(
-          icon: Icons.pie_chart_rounded,
-          value: '76%',
+        _buildOverviewCard(
           title: 'Utilization',
+          value: '76%',
           change: '↑ 5%',
-          iconColor: const Color(0xFF6D45D8),
-          iconBackground: const Color(0xFFF0EBFF),
+          icon: Icons.bar_chart_rounded,
         ),
-        _buildMetricCard(
-          icon: Icons.currency_rupee_rounded,
-          value: '₹ 12.45 L',
+        _buildOverviewCard(
           title: 'This Week Revenue',
+          value: '₹ 12.45 L',
           change: '↑ 15%',
-          iconColor: green,
-          iconBackground: const Color(0xFFEAF7F1),
+          icon: Icons.currency_rupee_rounded,
         ),
       ],
     );
   }
 
-  Widget _buildMetricCard({
-    required IconData icon,
-    required String value,
+  Widget _buildOverviewCard({
     required String title,
+    required String value,
     required String change,
-    required Color iconColor,
-    required Color iconBackground,
+    required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: border,
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x08000000),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBackground,
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 22,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: green.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: green,
+                  size: 19,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                change,
+                style: const TextStyle(
+                  color: green,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           const Spacer(),
           Text(
@@ -717,25 +654,15 @@ class DashboardPage extends ConsumerWidget {
             style: const TextStyle(
               color: dark,
               fontSize: 21,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             title,
             style: const TextStyle(
-              color: dark,
+              color: grey,
               fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$change vs last month',
-            style: TextStyle(
-              color: iconColor,
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -751,145 +678,120 @@ class DashboardPage extends ConsumerWidget {
     final dispatches = [
       {
         'id': 'BK-2024-051',
-        'event': 'Rohan & Priya Wedding',
-        'date': 'May 24, 9:00 AM',
+        'title': 'Rohan & Priya Wedding',
+        'date': 'May 24 • 9 AM',
         'items': '15 Items',
         'status': 'Dispatched',
-        'color': green,
       },
       {
         'id': 'BK-2024-052',
-        'event': 'Corporate Annual Event',
-        'date': 'May 25, 8:00 AM',
+        'title': 'Corporate Annual Event',
+        'date': 'May 25 • 8 AM',
         'items': '22 Items',
         'status': 'Confirmed',
-        'color': const Color(0xFF2878E8),
       },
       {
         'id': 'BK-2024-053',
-        'event': 'Sangeet Night',
-        'date': 'May 25, 12:00 PM',
+        'title': 'Sangeet Night',
+        'date': 'May 25 • 12 PM',
         'items': '18 Items',
         'status': 'Ready to Load',
-        'color': const Color(0xFFF47A24),
       },
       {
         'id': 'BK-2024-054',
-        'event': 'Product Launch',
-        'date': 'May 26, 9:00 AM',
+        'title': 'Product Launch',
+        'date': 'May 26 • 9 AM',
         'items': '30 Items',
         'status': 'Scheduled',
-        'color': grey,
       },
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(
-          color: border,
-        ),
-      ),
-      child: Column(
-        children: List.generate(
-          dispatches.length,
-          (index) {
-            final item = dispatches[index];
-            final Color color = item['color'] as Color;
-
-            return Container(
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                border: index == dispatches.length - 1
-                    ? null
-                    : const Border(
-                        bottom: BorderSide(
-                          color: border,
-                        ),
+    return Column(
+      children: dispatches.map((dispatch) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: border,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: green.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.local_shipping_outlined,
+                  color: green,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      dispatch['id']!,
+                      style: const TextStyle(
+                        color: green,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      dispatch['title']!,
+                      style: const TextStyle(
+                        color: dark,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${dispatch['date']} • ${dispatch['items']}',
+                      style: const TextStyle(
+                        color: grey,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEAF7F1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.calendar_month_rounded,
-                      color: color,
-                      size: 21,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['id'] as String,
-                          style: const TextStyle(
-                            color: dark,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          item['event'] as String,
-                          style: const TextStyle(
-                            color: dark,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '▣ ${item['date']}   ▫ ${item['items']}',
-                          style: const TextStyle(
-                            color: grey,
-                            fontSize: 9.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildStatusChip(
-                    item['status'] as String,
-                    color,
-                  ),
-                ],
+              _buildStatusBadge(
+                dispatch['status']!,
               ),
-            );
-          },
-        ),
-      ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildStatusChip(
-    String text,
-    Color color,
-  ) {
+  Widget _buildStatusBadge(String status) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 7,
+        horizontal: 9,
+        vertical: 5,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(9),
+        color: green.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 8.5,
-          fontWeight: FontWeight.w800,
+        status,
+        style: const TextStyle(
+          color: green,
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -900,77 +802,98 @@ class DashboardPage extends ConsumerWidget {
   // ============================================================
 
   Widget _buildQuickActions(BuildContext context) {
-    final actions = [
-      {
-        'title': 'New Booking',
-        'icon': Icons.edit_calendar_outlined,
-      },
-      {
-        'title': 'Check Availability',
-        'icon': Icons.search_rounded,
-      },
-      {
-        'title': 'Dispatch Board',
-        'icon': Icons.local_shipping_outlined,
-      },
-    ];
-
     return Row(
-      children: List.generate(
-        actions.length,
-        (index) {
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (actions[index]['title'] == 'New Booking') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const DateSelectionPage(),
-                    ),
-                  );
-                }
-              },
-              child: Container(
-                margin: EdgeInsets.only(
-                  right: index == actions.length - 1 ? 0 : 7,
+      children: [
+        Expanded(
+          child: _buildQuickAction(
+            icon: Icons.add_circle_outline_rounded,
+            title: 'New Booking',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DateSelectionPage(),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 4,
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildQuickAction(
+            icon: Icons.search_rounded,
+            title: 'Check Availability',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EquipmentPage(),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(17),
-                  border: Border.all(
-                    color: border,
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildQuickAction(
+            icon: Icons.local_shipping_outlined,
+            title: 'Dispatch Board',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Dispatch Board is not available yet.',
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Icon(
-                      actions[index]['icon'] as IconData,
-                      color: green,
-                      size: 25,
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      actions[index]['title'] as String,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      style: const TextStyle(
-                        color: dark,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAction({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: border,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: green,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: dark,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -980,74 +903,91 @@ class DashboardPage extends ConsumerWidget {
   // ============================================================
 
   Widget _buildAlerts() {
-    final alerts = [
-      {
-        'title': '3 equipment items need repair',
-        'icon': Icons.warning_amber_rounded,
-        'color': const Color(0xFFE53935),
-        'background': const Color(0xFFFFE9E9),
-      },
-      {
-        'title': '2 bookings require your approval',
-        'icon': Icons.warning_amber_rounded,
-        'color': const Color(0xFFF47A24),
-        'background': const Color(0xFFFFF0E0),
-      },
-      {
-        'title': '4 items are due for return tomorrow',
-        'icon': Icons.info_outline_rounded,
-        'color': const Color(0xFF2878E8),
-        'background': const Color(0xFFEAF2FF),
-      },
-    ];
+    return Column(
+      children: [
+        _buildAlertItem(
+          icon: Icons.build_outlined,
+          title: 'Equipment needs repair',
+          subtitle: '3 equipment items need repair',
+          iconColor: Colors.orange,
+        ),
+        const SizedBox(height: 10),
+        _buildAlertItem(
+          icon: Icons.pending_actions_outlined,
+          title: 'Booking approvals',
+          subtitle: '2 bookings require your approval',
+          iconColor: Colors.blue,
+        ),
+        const SizedBox(height: 10),
+        _buildAlertItem(
+          icon: Icons.assignment_return_outlined,
+          title: 'Equipment returns',
+          subtitle: '4 items are due for return tomorrow',
+          iconColor: Colors.red,
+        ),
+      ],
+    );
+  }
 
+  Widget _buildAlertItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color iconColor,
+  }) {
     return Container(
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: border,
         ),
       ),
-      child: Column(
-        children: List.generate(
-          alerts.length,
-          (index) {
-            final item = alerts[index];
-
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 1,
-              ),
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: item['background'] as Color,
-                  borderRadius: BorderRadius.circular(12),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: dark,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                child: Icon(
-                  item['icon'] as IconData,
-                  color: item['color'] as Color,
-                  size: 21,
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: grey,
+                    fontSize: 11,
+                  ),
                 ),
-              ),
-              title: Text(
-                item['title'] as String,
-                style: const TextStyle(
-                  color: dark,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              trailing: const Icon(
-                Icons.chevron_right_rounded,
-                color: grey,
-              ),
-            );
-          },
-        ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: grey,
+          ),
+        ],
       ),
     );
   }
@@ -1058,137 +998,277 @@ class DashboardPage extends ConsumerWidget {
 
   Widget _buildBottomNavigation(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        8,
-        8,
-        8,
-        12,
-      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
           top: BorderSide(
-            color: Color(0xFFECEFF1),
+            color: border,
+            width: 1,
           ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 72,
+          child: Row(
+            children: [
+              // HOME
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.home_rounded,
+                  label: 'Home',
+                  selected: true,
+                  onTap: () {
+                    // Already on Dashboard.
+                  },
+                ),
+              ),
+
+              // BOOKINGS
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.calendar_month_outlined,
+                  label: 'Bookings',
+                  selected: false,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BookingListPage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // EQUIPMENT
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Equipment',
+                  selected: false,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EquipmentPage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // ALERTS
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.notifications_none_rounded,
+                  label: 'Alerts',
+                  selected: false,
+                  badge: '2',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AlertsPage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // MORE
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.more_horiz_rounded,
+                  label: 'More',
+                  selected: false,
+                  onTap: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    String? badge,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: 72,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  size: 25,
+                  color: selected ? green : grey,
+                ),
+                if (badge != null)
+                  Positioned(
+                    right: -8,
+                    top: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        badge,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight:
+                    selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? green : grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// ALERTS PAGE
+// ============================================================
+
+class AlertsPage extends StatelessWidget {
+  const AlertsPage({super.key});
+
+  static const Color green = Color(0xFF16845F);
+  static const Color dark = Color(0xFF101B2D);
+  static const Color grey = Color(0xFF667085);
+  static const Color border = Color(0xFFE6E9ED);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Alerts',
+          style: TextStyle(
+            color: dark,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: dark,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          _alert(
+            icon: Icons.build_outlined,
+            title: 'Equipment needs repair',
+            subtitle: '3 equipment items need repair.',
+            color: Colors.orange,
+          ),
+          const SizedBox(height: 12),
+          _alert(
+            icon: Icons.pending_actions_outlined,
+            title: 'Booking approvals',
+            subtitle: '2 bookings require your approval.',
+            color: Colors.blue,
+          ),
+          const SizedBox(height: 12),
+          _alert(
+            icon: Icons.assignment_return_outlined,
+            title: 'Equipment returns',
+            subtitle: '4 items are due for return tomorrow.',
+            color: Colors.red,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _alert({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: border,
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(
-            Icons.home_rounded,
-            'Home',
-            true,
-          ),
-
-          _buildNavItem(
-            Icons.calendar_month_rounded,
-            'Bookings',
-            false,
-          ),
-
-          // ONLY EQUIPMENT BUTTON
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EquipmentPage(),
-                ),
-              );
-            },
-            child: _buildNavItem(
-              Icons.inventory_2_outlined,
-              'Equipment',
-              false,
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
             ),
           ),
-
-          _buildNavItem(
-            Icons.notifications_none_rounded,
-            'Alerts',
-            false,
-            badge: '2',
-          ),
-
-          _buildNavItem(
-            Icons.more_horiz_rounded,
-            'More',
-            false,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // NAV ITEM
-  // ============================================================
-
-  Widget _buildNavItem(
-    IconData icon,
-    String title,
-    bool selected, {
-    String? badge,
-  }) {
-    return SizedBox(
-      width: 62,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(
-                icon,
-                color: selected ? green : grey,
-                size: 24,
-              ),
-              if (badge != null)
-                Positioned(
-                  right: -8,
-                  top: -7,
-                  child: _buildBadge(badge),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: dark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: selected ? green : grey,
-              fontSize: 9.5,
-              fontWeight: selected
-                  ? FontWeight.w800
-                  : FontWeight.w500,
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: grey,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // NOTIFICATION BADGE
-  // ============================================================
-
-  Widget _buildBadge(String text) {
-    return Container(
-      width: 17,
-      height: 17,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Color(0xFFE53935),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-        ),
       ),
     );
   }

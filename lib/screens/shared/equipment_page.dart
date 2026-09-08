@@ -1,13 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../admin/add_equipment_page.dart';
 import '../admin/edit_equipment_page.dart';
 import 'equipment_details_page.dart';
 
 class EquipmentPage extends StatefulWidget {
   final bool showBottomNav;
+
   const EquipmentPage({
     super.key,
     this.showBottomNav = true,
@@ -59,7 +58,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
   ) {
     List<EquipmentItem> result = equipment;
 
-    // CATEGORY FILTER
     if (selectedCategory != 0) {
       final selected =
           categories[selectedCategory].toLowerCase();
@@ -69,7 +67,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
       }).toList();
     }
 
-    // SEARCH FILTER
     final search =
         searchController.text.trim().toLowerCase();
 
@@ -105,7 +102,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     )
                     .snapshots(),
                 builder: (context, snapshot) {
-                  // LOADING
                   if (snapshot.connectionState ==
                       ConnectionState.waiting) {
                     return const Center(
@@ -115,14 +111,12 @@ class _EquipmentPageState extends State<EquipmentPage> {
                     );
                   }
 
-                  // ERROR
                   if (snapshot.hasError) {
                     return _buildErrorState(
                       snapshot.error.toString(),
                     );
                   }
 
-                  // FIRESTORE DATA
                   final List<EquipmentItem> equipment =
                       snapshot.data?.docs
                               .map(
@@ -185,7 +179,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
               ),
             ),
 
-            if (widget.showBottomNav) _buildBottomNavigation(),
+            if (widget.showBottomNav)
+              _buildBottomNavigation(),
           ],
         ),
       ),
@@ -281,7 +276,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
           Text(
             searchController.text.isNotEmpty
                 ? 'Try a different search.'
-                : 'Add your first equipment item.',
+                : 'No equipment is currently available.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: grey,
@@ -391,7 +386,7 @@ class _EquipmentPageState extends State<EquipmentPage> {
             SizedBox(height: 2),
 
             Text(
-              'Admin',
+              'Client',
               style: TextStyle(
                 color: grey,
                 fontSize: 11,
@@ -410,88 +405,30 @@ class _EquipmentPageState extends State<EquipmentPage> {
   }
 
   // ============================================================
-  // PAGE TITLE + ADD EQUIPMENT
+  // PAGE TITLE
   // ============================================================
 
   Widget _buildPageTitle() {
-    return Row(
+    return const Column(
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-        const Expanded(
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Equipment',
-                style: TextStyle(
-                  color: dark,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-
-              SizedBox(height: 5),
-
-              Text(
-                'Manage and track your equipment inventory',
-                style: TextStyle(
-                  color: grey,
-                  fontSize: 12.5,
-                ),
-              ),
-            ],
+        Text(
+          'Equipment',
+          style: TextStyle(
+            color: dark,
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
           ),
         ),
 
-        const SizedBox(width: 10),
+        SizedBox(height: 5),
 
-        GestureDetector(
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const AddEquipmentPage(),
-              ),
-            );
-          },
-
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 12,
-            ),
-            decoration: BoxDecoration(
-              color: green,
-              borderRadius:
-                  BorderRadius.circular(12),
-            ),
-            child: const Row(
-              mainAxisSize:
-                  MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 20,
-                ),
-
-                SizedBox(width: 5),
-
-                Text(
-                  'Add Equipment',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight:
-                        FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
+        Text(
+          'Manage and track your equipment inventory',
+          style: TextStyle(
+            color: grey,
+            fontSize: 12.5,
           ),
         ),
       ],
@@ -773,7 +710,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
   // EQUIPMENT LIST
   // ============================================================
 
-  Widget _buildEquipmentList(List<EquipmentItem> items) {
+  Widget _buildEquipmentList(
+    List<EquipmentItem> items,
+  ) {
     return Column(
       children: items.map((item) {
         return Padding(
@@ -815,10 +754,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
       statusBackground =
           const Color(0xFFFFF0D9);
     }
-
-    // ==========================================================
-    // THIS MAKES THE WHOLE CARD CLICKABLE
-    // ==========================================================
 
     return GestureDetector(
       onTap: () {
@@ -866,10 +801,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
           crossAxisAlignment:
               CrossAxisAlignment.center,
           children: [
-            // ==================================================
-            // EQUIPMENT IMAGE
-            // ==================================================
-
             Container(
               width: 120,
               height: 125,
@@ -907,10 +838,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
 
             const SizedBox(width: 15),
 
-            // ==================================================
-            // EQUIPMENT INFORMATION
-            // ==================================================
-
             Expanded(
               child: Column(
                 crossAxisAlignment:
@@ -934,47 +861,71 @@ class _EquipmentPageState extends State<EquipmentPage> {
                         ),
                       ),
 
-                      // ── Edit / Delete popup ──────────────────
                       PopupMenuButton<String>(
                         onSelected: (value) async {
                           if (value == 'edit') {
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => EditEquipmentPage(
+                                builder: (_) =>
+                                    EditEquipmentPage(
                                   firestoreDocId:
                                       item.firestoreDocId,
                                   name: item.name,
-                                  equipmentId: item.id,
-                                  category: item.category,
-                                  brand: item.brand,
-                                  total: item.total,
-                                  damaged: item.damaged,
-                                  imageUrl: item.imageUrl,
+                                  equipmentId:
+                                      item.id,
+                                  category:
+                                      item.category,
+                                  brand:
+                                      item.brand,
+                                  total:
+                                      item.total,
+                                  damaged:
+                                      item.damaged,
+                                  imageUrl:
+                                      item.imageUrl,
                                 ),
                               ),
                             );
                           } else if (value == 'delete') {
-                            _confirmDelete(context, item);
+                            _confirmDelete(
+                              context,
+                              item,
+                            );
                           }
                         },
-                        offset: const Offset(0, 30),
-                        shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(12)),
-                        itemBuilder: (_) => const [
+                        offset:
+                            const Offset(0, 30),
+                        shape:
+                            RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(
+                            12,
+                          ),
+                        ),
+                        itemBuilder: (_) =>
+                            const [
                           PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined,
-                                    size: 18,
-                                    color: Color(0xFF2878E8)),
-                                SizedBox(width: 8),
-                                Text('Edit',
-                                    style: TextStyle(
-                                        fontWeight:
-                                            FontWeight.w600)),
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color:
+                                      Color(0xFF2878E8),
+                                ),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Text(
+                                  'Edit',
+                                  style:
+                                      TextStyle(
+                                    fontWeight:
+                                        FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -982,15 +933,26 @@ class _EquipmentPageState extends State<EquipmentPage> {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline_rounded,
-                                    size: 18,
-                                    color: Color(0xFFE53935)),
-                                SizedBox(width: 8),
-                                Text('Delete',
-                                    style: TextStyle(
-                                        color: Color(0xFFE53935),
-                                        fontWeight:
-                                            FontWeight.w600)),
+                                Icon(
+                                  Icons
+                                      .delete_outline_rounded,
+                                  size: 18,
+                                  color:
+                                      Color(0xFFE53935),
+                                ),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Text(
+                                  'Delete',
+                                  style:
+                                      TextStyle(
+                                    color:
+                                        Color(0xFFE53935),
+                                    fontWeight:
+                                        FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -1053,10 +1015,6 @@ class _EquipmentPageState extends State<EquipmentPage> {
             ),
 
             const SizedBox(width: 10),
-
-            // ==================================================
-            // AVAILABILITY
-            // ==================================================
 
             Container(
               width: 105,
@@ -1379,7 +1337,8 @@ class _EquipmentPageState extends State<EquipmentPage> {
       context: ctx,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+            borderRadius:
+                BorderRadius.circular(16)),
         title: const Text(
           'Delete Equipment?',
           style: TextStyle(
@@ -1389,50 +1348,87 @@ class _EquipmentPageState extends State<EquipmentPage> {
         ),
         content: Text(
           'Are you sure you want to delete "${item.name}"? This cannot be undone.',
-          style: const TextStyle(color: grey, fontSize: 13),
+          style: const TextStyle(
+            color: grey,
+            fontSize: 13,
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancel',
-                style: TextStyle(color: grey)),
+            onPressed: () =>
+                Navigator.pop(dialogCtx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: grey,
+              ),
+            ),
           ),
+
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE53935),
-              foregroundColor: Colors.white,
+            style:
+                ElevatedButton.styleFrom(
+              backgroundColor:
+                  const Color(0xFFE53935),
+              foregroundColor:
+                  Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(10),
+              ),
             ),
             onPressed: () async {
               Navigator.pop(dialogCtx);
+
               try {
-                await FirebaseFirestore.instance
+                await FirebaseFirestore
+                    .instance
                     .collection('equipment')
-                    .doc(item.firestoreDocId)
+                    .doc(
+                      item.firestoreDocId,
+                    )
                     .delete();
+
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(
                   SnackBar(
                     content:
-                        Text('"${item.name}" deleted.'),
+                        Text(
+                      '"${item.name}" deleted.',
+                    ),
                     backgroundColor:
-                        const Color(0xFFE53935),
+                        const Color(
+                      0xFFE53935,
+                    ),
                   ),
                 );
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(
                   SnackBar(
-                      content:
-                          Text('Failed to delete: $e')),
+                    content:
+                        Text(
+                      'Failed to delete: $e',
+                    ),
+                  ),
                 );
               }
             },
-            child: const Text('Delete',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                fontWeight:
+                    FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -1445,9 +1441,9 @@ class _EquipmentPageState extends State<EquipmentPage> {
 // ================================================================
 
 class EquipmentItem {
-  final String firestoreDocId; // actual Firestore document ID
+  final String firestoreDocId;
   final String name;
-  final String id; // equipmentId field value
+  final String id;
   final String category;
   final String brand;
 
@@ -1498,7 +1494,8 @@ class EquipmentItem {
         ).clamp(0, total);
 
     final String name =
-        (data['name'] ?? 'Unnamed Equipment')
+        (data['name'] ??
+                'Unnamed Equipment')
             .toString();
 
     final String category =
@@ -1521,7 +1518,8 @@ class EquipmentItem {
           .toString(),
       category: category,
       brand:
-          (data['brand'] ?? 'Unknown')
+          (data['brand'] ??
+                  'Unknown')
               .toString(),
       total: total,
       damaged: damaged,

@@ -1,41 +1,307 @@
-# GearGrid Live
+GearGrid
 
-GearGrid Live is a Flutter-based Android application for event equipment rental and dispatch management. It is designed around two roles:
+GearGrid is a Flutter + Firebase application for managing event-equipment rentals, inventory availability, bookings, approvals, and dispatch.
 
-- `Client`: browse equipment, prepare booking requests, choose event date and time, and track request status.
-- `Admin`: manage inventory, review bookings, approve requests, monitor schedules, and advance dispatch status.
+It is designed for a regional event-equipment rental company that supplies sound systems, lighting, visual equipment, and furniture for weddings and corporate events.
 
-## What Is Included
+Problem
 
-- A custom visual system with layered gradients, premium glass panels, and a more cinematic event-production look.
-- Email/password authentication and persistent role profiles.
-- Realtime Cloud Firestore streams for inventory, booking requests, and dispatch status.
-- Booking conflict detection that atomically reserves each equipment item for every hour of an approved event window.
-- Admin inventory controls for add, edit, remove, and stock adjustment flows.
+The existing rental workflow relies heavily on phone calls and manual coordination. During peak season, the same physical equipment can be committed to overlapping events, with the conflict sometimes discovered only when the warehouse team starts loading.
 
-## Firebase Backend
+GearGrid addresses this by making event slots, equipment quantities, booking status, and reservation capacity visible in one system.
 
-GearGrid is connected to the Firebase project `geargrid-live-2026-pd37`, with its default Firestore database hosted in `asia-south1` (Mumbai) and delete protection enabled.
+Core Objectives
 
-- `firebase.json`, `firestore.rules`, and `firestore.indexes.json` define the Firestore deployment.
-- `lib/firebase_options.dart` and `android/app/google-services.json` contain the generated Android configuration for this project.
-- New accounts are always created with the `client` role. Promote the intended warehouse administrator by changing `users/{uid}.role` to `admin` in the Firebase console. The deployed rules prevent users from promoting themselves.
-- In Firebase Console, enable **Authentication > Sign-in method > Email/Password** before creating the first account.
-- The first administrator can add inventory through the app. Clients then see the shared collection in realtime.
+Show equipment availability for a selected event window.
 
-The Firestore rules and booking index are already deployed. The initial live catalog contains six equipment records. The only manual console step remaining is enabling the Email/Password provider; Firebase requires this one-time activation before it exposes the Authentication configuration API.
+Allow clients to browse equipment and create an event booking.
 
-## Run The App
+Capture event, venue, quantity, pricing, and payment information.
 
-```bash
+Give administrators a real-time booking queue.
+
+Prevent approval of a booking when requested quantities exceed inventory during the selected time window.
+
+Maintain hourly reservation slots so inventory commitments can be checked consistently.
+
+Move approved bookings through dispatch and completion states.
+
+Keep client and admin access separated through Firebase Authentication and Firestore rules.
+
+Current Technology Stack
+
+Frontend: Flutter / Dart
+
+Authentication: Firebase Authentication
+
+Database: Cloud Firestore
+
+Images: Firebase Storage
+
+UI: Material widgets, Google Fonts, custom theme/widgets
+
+Platforms: Flutter-supported platforms configured by the project
+
+Application Flow
+
+Landing
+   |
+   v
+Authentication
+   |
+   +--------------------+
+   |                    |
+ Client               Admin
+   |                    |
+   v                    v
+Storefront          Dispatch Dashboard
+   |
+Select event slot
+   |
+Browse equipment
+   |
+Add quantities
+   |
+Cart
+   |
+Payment
+   |
+Booking created
+   |
+Admin approval
+   |
+Reservation slots locked
+   |
+Dispatch
+   |
+Completed
+
+Main Features
+
+Client
+
+Email/password registration and login.
+
+Browse equipment by category.
+
+Select an event date/time window.
+
+View live reserved quantities and calculated availability.
+
+Add/remove equipment quantities.
+
+Review event and delivery details.
+
+Review subtotal, platform fee, tax, and total.
+
+Simulated UPI/card/wallet payment flow.
+
+View order history and booking status.
+
+Profile and help/support screens.
+
+Admin
+
+Real-time equipment inventory.
+
+Real-time booking queue.
+
+Approve or reject incoming bookings.
+
+Transactional availability validation during approval.
+
+Automatic creation/update of hourly reservation slots.
+
+Dispatch workflow with driver and vehicle information.
+
+Move bookings from approved → dispatched → completed.
+
+Add, edit, remove, and adjust equipment inventory.
+
+Upload equipment images to Firebase Storage.
+
+View historical completed/rejected bookings.
+
+Booking Statuses
+
+Status
+
+Meaning
+
+paid
+
+Payment/order received and waiting for confirmation
+
+pending
+
+Legacy/backward-compatible pending state
+
+approved
+
+Admin confirmed the booking and inventory reservation
+
+dispatched
+
+Equipment has been sent out
+
+completed
+
+Event/order completed
+
+rejected
+
+Booking declined/cancelled
+
+Inventory Conflict Logic
+
+The important inventory rule is:
+
+For every equipment item
+and every hourly slot in the event window:
+
+existing reserved units + requested units
+must be <= total inventory units
+
+Approval is performed inside a Firestore transaction. The transaction reads the booking, reads the required inventory records, reads the relevant reservation-slot documents, validates capacity, updates the reservation slots, and finally changes the booking to approved.
+
+This is the critical protection against two administrators approving conflicting commitments at the same time.
+
+Firestore Collections
+
+users/{userId}
+equipment/{equipmentId}
+bookings/{bookingId}
+reservationSlots/{slotId}
+
+users
+
+Stores application profile information and the application role.
+
+equipment
+
+Stores inventory information such as name, category, total units, price, description, power profile, and optional image URL.
+
+bookings
+
+Stores client, event, venue, time window, requested quantities, financial information, payment metadata, and dispatch information.
+
+reservationSlots
+
+Stores the reserved quantity for a particular equipment item and hourly time slot.
+
+Project Structure
+
+lib/
+├── app.dart
+├── main.dart
+├── data/
+│   └── demo_repository.dart
+├── models/
+│   ├── app_role.dart
+│   ├── app_user.dart
+│   ├── booking.dart
+│   └── equipment.dart
+├── screens/
+│   ├── auth_screen.dart
+│   ├── cart_screen.dart
+│   ├── client_storefront_screen.dart
+│   ├── help_support_screen.dart
+│   ├── home_screen.dart
+│   ├── landing_screen.dart
+│   ├── order_history_screen.dart
+│   ├── payment_screen.dart
+│   └── profile_settings_screen.dart
+├── services/
+│   ├── booking_engine.dart
+│   └── firestore_repository.dart
+├── theme/
+│   └── app_theme.dart
+└── widgets/
+    ├── glass_panel.dart
+    └── live_pulse_dot.dart
+
+Setup
+
+Prerequisites
+
+Flutter SDK
+
+Dart SDK compatible with the version in pubspec.yaml
+
+A Firebase project
+
+Firebase Authentication enabled
+
+Cloud Firestore enabled
+
+Firebase Storage enabled if equipment images are used
+
+Install
+
+flutter pub get
+
+Firebase
+
+The project contains Firebase configuration files for the configured platforms.
+
+Before running a new Firebase project, make sure the Flutter Firebase configuration points to the intended Firebase project.
+
+Run
+
 flutter run
-```
 
-## Verify
+Security Notes
 
-```bash
-flutter analyze
-flutter test
-```
+Firebase Authentication identifies the user, while the Firestore users document determines the application role.
 
-`flutter analyze` and `flutter test` pass in this workspace.
+The current Firestore rules enforce:
+
+authenticated users can access equipment;
+
+only admins can write equipment;
+
+clients can read their own bookings;
+
+admins can read bookings;
+
+clients can create bookings only for themselves;
+
+booking updates/deletes are admin-only;
+
+reservation-slot writes are admin-only.
+
+For production, admin provisioning should be moved away from a client-controlled email check and handled with a trusted server-side/admin process or Firebase custom claims.
+
+Important Production Considerations
+
+The current payment screen simulates payment processing. A real deployment should use a trusted payment gateway and verify payment server-side before treating an order as paid.
+
+Availability is protected at admin approval time. For a stronger production reservation experience, the booking creation flow can also introduce temporary holds with expiry, followed by payment confirmation and transactional reservation.
+
+Other recommended production additions:
+
+server-side payment verification;
+
+audit logs for booking/inventory changes;
+
+cancellation and refund rules;
+
+timezone normalization;
+
+dispatch preparation/checklist;
+
+warehouse loading confirmation;
+
+notifications for booking/dispatch changes;
+
+stronger admin provisioning;
+
+automated tests for concurrent booking scenarios.
+
+Documentation
+
+PRD.md - Product Requirements Document
+
+HLD.md - High-Level Design
+
+LLD.md - Low-Level Design

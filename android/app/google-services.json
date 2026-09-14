@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "261778208186",
+    "project_id": "geargrid-live-2026-pd37",
+    "storage_bucket": "geargrid-live-2026-pd37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261778208186:android:34a711b498e455a39a1983",
+        "android_client_info": {
+          "package_name": "com.geargrid.gear_grid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5aSbzMyO9PXBNdo4TJOaSeelz_Jve2Us"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
